@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Completar reserva</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        .business-logo {
+            max-width: 150px;
+            max-height: 110px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 18px;
+            border-radius: 12px;
+        }
+
+        body.theme-classic {
+            font-family: Arial, sans-serif;
+            background: #f6f6f6;
+            margin: 0;
+        }
+
+        body.theme-classic .container {
+            max-width: 700px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        }
+
+        body.theme-modern,
+        body.theme-beauty {
+            margin: 0;
+        }
+
+        body.theme-modern {
+            font-family: Arial, sans-serif;
+            background: #f3f3f3;
+        }
+
+        body.theme-beauty {
+            font-family: Georgia, "Times New Roman", serif;
+            background: #fff4f7;
+            color: #4a2f38;
+        }
+
+        .card {
+            max-width: 700px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        body.theme-beauty .card {
+            border: 1px solid #f5d6df;
+            box-shadow: 0 12px 34px rgba(179, 92, 122, 0.14);
+        }
+
+        h1 {
+            margin-top: 0;
+            text-align: center;
+        }
+
+        .summary {
+            background: #fafafa;
+            padding: 16px;
+            border-radius: 14px;
+            margin-bottom: 22px;
+            border: 1px solid #eee;
+        }
+
+        body.theme-beauty .summary {
+            background: #fff8fb;
+            border: 1px solid #f1d4de;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: black;
+            color: white;
+            width: 100%;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        body.theme-beauty button {
+            background: #c46a86;
+        }
+
+        .muted {
+            color: #666;
+            text-align: center;
+            margin-top: -8px;
+            margin-bottom: 22px;
+        }
+
+        @media (max-width: 640px) {
+            body.theme-classic .container,
+            .card {
+                margin: 20px 12px;
+                padding: 22px;
+            }
+
+            .business-logo {
+                max-width: 120px;
+                max-height: 90px;
+            }
+        }
+    </style>
+</head>
+
+<body class="theme-{{ business.theme }}">
+
+{% if business.theme == "classic" %}
+<div class="container">
+{% else %}
+<div class="card">
+{% endif %}
+
+    {% if business.logo %}
+        <img src="{{ business.logo.url }}" alt="{{ business.name }}" class="business-logo">
+    {% endif %}
+
+    <h1>Completa tu reserva</h1>
+    <p class="muted">{{ business.name }}</p>
+
+    <div class="summary">
+        <p><strong>Fecha:</strong> {{ booking_date }}</p>
+        <p><strong>Hora:</strong> {{ start_time }}</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <input type="hidden" name="service_id" value="{{ service_id }}">
+        <input type="hidden" name="booking_date" value="{{ booking_date }}">
+        <input type="hidden" name="start_time" value="{{ start_time }}">
+        <input type="hidden" name="employee_id" value="{{ employee_id }}">
+
+        <label>Nombre</label>
+        <input type="text" name="customer_name" required>
+
+        <label>Teléfono</label>
+        <input type="text" name="customer_phone" required>
+
+        <label>Email</label>
+        <input type="email" name="customer_email">
+
+        <button type="submit" name="confirm_booking">Confirmar reserva</button>
+    </form>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Servicios del empleado</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            color: #222;
+        }
+
+        .container {
+            max-width: 760px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 26px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin-bottom: 22px;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        .muted {
+            color: #666;
+        }
+
+        .service-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            background: #fafafa;
+        }
+
+        .service-row input {
+            width: auto;
+        }
+
+        .service-info {
+            flex: 1;
+        }
+
+        .service-name {
+            font-weight: bold;
+        }
+
+        .service-meta {
+            color: #666;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: black;
+            color: white;
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 9px;
+            margin-top: 18px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .btn-secondary {
+            background: #555;
+            margin-left: 8px;
+        }
+
+        .empty {
+            color: #777;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Servicios de {{ employee.full_name }}</h1>
+            <p class="muted">Selecciona qué servicios puede realizar este empleado.</p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% if services %}
+                    {% for service in services %}
+                        <label class="service-row">
+                            <input
+                                type="checkbox"
+                                name="services"
+                                value="{{ service.id }}"
+                                {% if service.id in assigned_service_ids %}checked{% endif %}
+                            >
+
+                            <div class="service-info">
+                                <div class="service-name">{{ service.name }}</div>
+                                <div class="service-meta">
+                                    {{ service.duration_minutes }} min · {{ service.price }} €
+                                </div>
+                            </div>
+                        </label>
+                    {% endfor %}
+
+                    <button type="submit" class="btn">Guardar cambios</button>
+                    <a href="/dashboard/employees/" class="btn btn-secondary">Volver</a>
+                {% else %}
+                    <p class="empty">No hay servicios activos creados todavía.</p>
+                    <a href="/dashboard/services/new/" class="btn">Crear servicio</a>
+                    <a href="/dashboard/employees/" class="btn btn-secondary">Volver</a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</body>
+</html>

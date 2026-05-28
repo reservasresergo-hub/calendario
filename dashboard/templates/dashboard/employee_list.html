@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Empleados</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            color: #222;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+        }
+
+        h1 { margin-top: 0; }
+
+        .muted { color: #666; }
+
+        .btn {
+            display: inline-block;
+            background: black;
+            color: white;
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-secondary { background: #555; }
+        .btn-small { padding: 7px 9px; font-size: 12px; }
+        .btn-danger { background: #b42318; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 18px;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th {
+            background: #fafafa;
+            font-size: 14px;
+        }
+
+        .empty {
+            color: #777;
+            font-style: italic;
+        }
+
+        .status-active {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-inactive {
+            color: #999;
+        }
+
+        .inline-form { display: inline; }
+
+        .message {
+            border-left: 5px solid #16784b;
+            background: #f4fff8;
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card">
+            <h1>Empleados</h1>
+            <p class="muted">Gestiona los empleados de {{ business.name }}.</p>
+
+            <a class="btn" href="/dashboard/employees/new/">+ Nuevo empleado</a>
+            <a class="btn btn-secondary" href="/dashboard/">← Volver al panel</a>
+        </div>
+
+        <div class="card">
+            {% if employees %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Empleado</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for employee in employees %}
+                            <tr>
+                                <td><strong>{{ employee.full_name }}</strong></td>
+
+                                <td>
+                                    {% if employee.active %}
+                                        <span class="status-active">Activo</span>
+                                    {% else %}
+                                        <span class="status-inactive">Inactivo</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <a href="/dashboard/employees/{{ employee.id }}/edit/" class="btn btn-small">
+                                        Editar
+                                    </a>
+                                    <a href="/dashboard/employees/{{ employee.id }}/services/" class="btn btn-small">
+                                         Servicios
+                                    </a>
+                                    <a href="/dashboard/employees/{{ employee.id }}/schedule/" class="btn btn-small btn-secondary">
+                                         Horarios
+                                    </a>
+                                    <form method="post" action="/dashboard/employees/{{ employee.id }}/delete/" class="inline-form">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-small btn-danger"
+                                                onclick="return confirm('¿Seguro que quieres eliminar este empleado?');">
+                                            Eliminar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="empty">Todavía no hay empleados creados.</p>
+            {% endif %}
+        </div>
+
+    </div>
+</body>
+</html>

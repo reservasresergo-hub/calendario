@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Iniciar sesión | Panel empresa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #111827;
+        }
+
+        .page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 440px;
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 14px 35px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            margin-top: 0;
+            margin-bottom: 28px;
+            color: #6b7280;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            margin-top: 16px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #d1d5db;
+            font-size: 15px;
+        }
+
+        .btn {
+            width: 100%;
+            margin-top: 26px;
+            border: none;
+            border-radius: 12px;
+            background: #111827;
+            color: white;
+            padding: 14px 18px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #000000;
+        }
+
+        .register-link {
+            margin-top: 18px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .register-link a {
+            color: #111827;
+            font-weight: 700;
+        }
+
+        .alert {
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .alert-info {
+            background: #e0f2fe;
+            color: #075985;
+            border: 1px solid #bae6fd;
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+    <div class="card">
+        <h1>Iniciar sesión</h1>
+        <p class="subtitle">
+            Accede al panel de tu negocio.
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" action="{% url 'login' %}" autocomplete="off">
+            {% csrf_token %}
+
+            <label for="username">
+                Email de acceso
+            </label>
+            <input
+                type="email"
+                id="username"
+                name="username"
+                required
+                autocomplete="off"
+            >
+
+            <label for="password">
+                Contraseña
+            </label>
+            <input
+                type="password"
+                id="password"
+                name="password"
+                required
+                autocomplete="new-password"
+            >
+
+            <button type="submit" class="btn">
+                Entrar
+            </button>
+        </form>
+
+        <div class="register-link">
+            ¿Quieres contratar el sistema?
+            Contacta con nosotros para activar tu cuenta.
+        </div>
+
+        <div class="register-link">
+            ¿Has olvidado tu contraseña?
+            Contacta con soporte para recibir una contraseña temporal.
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

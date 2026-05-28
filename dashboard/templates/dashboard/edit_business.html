@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuración negocio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            color: #222;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 26px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin-bottom: 22px;
+        }
+
+        h1, h2 {
+            margin-top: 0;
+        }
+
+        .muted {
+            color: #666;
+        }
+
+        label {
+            display: block;
+            margin-top: 16px;
+            margin-bottom: 7px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 9px;
+            font-size: 15px;
+        }
+
+        input[type="file"] {
+            background: #fafafa;
+        }
+
+        .logo-preview {
+            margin-top: 14px;
+            padding: 14px;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            background: #fafafa;
+        }
+
+        .logo-preview img {
+            max-width: 180px;
+            max-height: 120px;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+            background: white;
+            padding: 8px;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 18px;
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .checkbox-row input {
+            width: auto;
+            transform: scale(1.2);
+        }
+
+        .checkbox-row label {
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .help-box {
+            background: #fff8df;
+            border: 1px solid #f0dfa4;
+            color: #6f5700;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-top: 14px;
+            font-size: 14px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: black;
+            color: white;
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 9px;
+            margin-top: 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .btn-secondary {
+            background: #555;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="card">
+                <h1>Configuración del negocio</h1>
+                <p class="muted">Edita los datos básicos de tu empresa.</p>
+
+                <label for="name">Nombre</label>
+                <input type="text" id="name" name="name" value="{{ business.name }}" required>
+
+                <label for="phone">Teléfono</label>
+                <input type="text" id="phone" name="phone" value="{{ business.phone|default_if_none:'' }}">
+
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="{{ business.email|default_if_none:'' }}">
+
+                <label for="logo">Logo del negocio</label>
+                <input type="file" id="logo" name="logo" accept="image/*">
+
+                {% if business.logo %}
+                    <div class="logo-preview">
+                        <p class="muted">Logo actual:</p>
+                        <img src="{{ business.logo.url }}" alt="Logo de {{ business.name }}">
+
+                        <div class="checkbox-row">
+                            <input type="checkbox" id="delete_logo" name="delete_logo">
+                            <label for="delete_logo">Eliminar logo actual</label>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="card">
+                <h2>Reglas de reserva online</h2>
+                <p class="muted">Configura cuándo pueden reservar los clientes desde la web pública.</p>
+
+                <div class="checkbox-row">
+                    <input
+                        type="checkbox"
+                        id="allow_past_bookings"
+                        name="allow_past_bookings"
+                        {% if business.allow_past_bookings %}checked{% endif %}
+                    >
+                    <label for="allow_past_bookings">Permitir reservas en fechas pasadas</label>
+                </div>
+
+                <div class="help-box">
+                    Normalmente esta opción debe estar desactivada. Solo actívala si quieres poder registrar reservas antiguas desde la web.
+                </div>
+
+                <label for="min_advance_hours">Horas mínimas de antelación</label>
+                <input
+                    type="number"
+                    id="min_advance_hours"
+                    name="min_advance_hours"
+                    min="0"
+                    value="{{ business.min_advance_hours }}"
+                    required
+                >
+
+                <label for="max_advance_days">Días máximos de antelación</label>
+                <input
+                    type="number"
+                    id="max_advance_days"
+                    name="max_advance_days"
+                    min="1"
+                    value="{{ business.max_advance_days }}"
+                    required
+                >
+
+                <div class="help-box">
+                    Ejemplo: si pones 2 horas y 31 días, el cliente no podrá reservar con menos de 2 horas ni más de 31 días vista.
+                </div>
+
+                <button type="submit" class="btn">Guardar cambios</button>
+                <a href="/dashboard/" class="btn btn-secondary">Volver</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

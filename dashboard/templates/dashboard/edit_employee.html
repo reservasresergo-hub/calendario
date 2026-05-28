@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar empleado</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            color: #222;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 26px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        h1 { margin-top: 0; }
+
+        .muted { color: #666; }
+
+        label {
+            display: block;
+            margin-top: 16px;
+            margin-bottom: 7px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 9px;
+            font-size: 15px;
+        }
+
+        .checkbox-row {
+            margin-top: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-row label {
+            margin: 0;
+        }
+
+        .btn {
+            display: inline-block;
+            background: black;
+            color: white;
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 9px;
+            margin-top: 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .btn-secondary {
+            background: #555;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Editar empleado</h1>
+            <p class="muted">Modifica los datos de {{ employee.full_name }}.</p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <label for="full_name">Nombre completo</label>
+                <input type="text" id="full_name" name="full_name" value="{{ employee.full_name }}" required>
+
+                <div class="checkbox-row">
+                    <input type="checkbox" id="active" name="active" {% if employee.active %}checked{% endif %}>
+                    <label for="active">Empleado activo</label>
+                </div>
+
+                <button type="submit" class="btn">Guardar cambios</button>
+                <a href="/dashboard/employees/" class="btn btn-secondary">Volver</a>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

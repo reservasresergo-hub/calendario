@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Bloquear horario</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            margin-top: 14px;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        .btn {
+            margin-top: 20px;
+            background: #c2410c;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .btn-back {
+            display: inline-block;
+            margin-top: 14px;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Bloquear horario</h1>
+
+            {% if error_message %}
+                <div class="error">
+                    {{ error_message }}
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                <label>Empleado</label>
+                <select name="employee_id" required>
+                    {% for employee in employees %}
+                        <option value="{{ employee.id }}">
+                            {{ employee.full_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <label>Fecha</label>
+                <input type="date" name="date" required>
+
+                <label>Hora inicio</label>
+                <input type="time" name="start_time" required>
+
+                <label>Hora fin</label>
+                <input type="time" name="end_time" required>
+
+                <button type="submit" class="btn">
+                    Bloquear
+                </button>
+            </form>
+
+            <a href="/dashboard/" class="btn-back">
+                ← Volver al panel
+            </a>
+        </div>
+    </div>
+</body>
+</html>

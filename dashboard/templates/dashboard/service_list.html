@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Servicios</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            color: #222;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        .muted {
+            color: #666;
+        }
+
+        .btn {
+            display: inline-block;
+            background: black;
+            color: white;
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-secondary {
+            background: #555;
+        }
+
+        .btn-small {
+            padding: 7px 9px;
+            font-size: 12px;
+        }
+
+        .btn-danger {
+            background: #b42318;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 18px;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th {
+            background: #fafafa;
+            font-size: 14px;
+        }
+
+        .empty {
+            color: #777;
+            font-style: italic;
+        }
+
+        .status-active {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-inactive {
+            color: #999;
+        }
+
+        .inline-form {
+            display: inline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <div class="card">
+            <h1>Servicios</h1>
+            <p class="muted">Gestiona los servicios de {{ business.name }}.</p>
+
+            <a class="btn" href="/dashboard/services/new/">+ Nuevo servicio</a>
+            <a class="btn btn-secondary" href="/dashboard/">← Volver al panel</a>
+        </div>
+
+        <div class="card">
+            {% if services %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Servicio</th>
+                            <th>Duración</th>
+                            <th>Precio</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for service in services %}
+                            <tr>
+                                <td><strong>{{ service.name }}</strong></td>
+                                <td>{{ service.duration_minutes }} min</td>
+                                <td>{{ service.price }} €</td>
+
+                                <td>
+                                    {% if service.active %}
+                                        <span class="status-active">Activo</span>
+                                    {% else %}
+                                        <span class="status-inactive">Inactivo</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <a href="/dashboard/services/{{ service.id }}/edit/" class="btn btn-small">
+                                        Editar
+                                    </a>
+
+                                    <form method="post" action="/dashboard/services/{{ service.id }}/delete/" class="inline-form">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-small btn-danger">
+                                            Eliminar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+            {% else %}
+                <p class="empty">Todavía no hay servicios creados.</p>
+            {% endif %}
+        </div>
+
+    </div>
+</body>
+</html>

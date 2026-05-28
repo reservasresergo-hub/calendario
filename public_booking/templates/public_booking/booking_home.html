@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ business.name }} | Reservas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        .business-logo {
+            max-width: 150px;
+            max-height: 110px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 18px;
+            border-radius: 12px;
+        }
+
+        body.theme-classic {
+            font-family: Arial, sans-serif;
+            background: #f6f6f6;
+            margin: 0;
+            padding: 0;
+            color: #222;
+        }
+
+        body.theme-classic .container {
+            max-width: 820px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        }
+
+        body.theme-classic h1,
+        body.theme-classic h2,
+        body.theme-classic h3 {
+            color: #222;
+        }
+
+        body.theme-classic label {
+            display: block;
+            margin-top: 18px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        body.theme-classic select,
+        body.theme-classic input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        body.theme-classic button {
+            margin-top: 20px;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 8px;
+            background: black;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        body.theme-classic .slots {
+            margin-top: 30px;
+        }
+
+        body.theme-classic .slot-card {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #fafafa;
+        }
+
+        body.theme-classic .empty {
+            color: #777;
+            font-style: italic;
+        }
+
+        body.theme-classic .slot-form {
+            margin-bottom: 10px;
+        }
+
+        body.theme-classic .slot-button {
+            margin-top: 12px;
+        }
+
+        body.theme-classic .error-box {
+            background: #fff4f4;
+            color: #9b1c1c;
+            border: 1px solid #f0caca;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        body.theme-classic .help-text {
+            font-size: 14px;
+            color: #666;
+            margin-top: 6px;
+        }
+
+        body.theme-modern {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(180deg, #f8f8f8 0%, #efefef 100%);
+            color: #222;
+        }
+
+        body.theme-modern .page {
+            min-height: 100vh;
+            padding: 32px 16px;
+        }
+
+        body.theme-modern .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        body.theme-modern .hero {
+            background: white;
+            border-radius: 22px;
+            padding: 32px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        body.theme-modern .badge {
+            display: inline-block;
+            background: #f1f1f1;
+            color: #444;
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        body.theme-modern h1 {
+            margin: 0 0 12px;
+            font-size: 34px;
+            line-height: 1.1;
+        }
+
+        body.theme-modern .subtitle {
+            margin: 0;
+            color: #666;
+            font-size: 16px;
+        }
+
+        body.theme-modern .card {
+            background: white;
+            border-radius: 22px;
+            padding: 28px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            margin-bottom: 24px;
+        }
+
+        body.theme-modern h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        body.theme-modern h3 {
+            margin-top: 0;
+            margin-bottom: 18px;
+            font-size: 20px;
+        }
+
+        body.theme-modern label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        body.theme-modern .field {
+            margin-bottom: 18px;
+        }
+
+        body.theme-modern select,
+        body.theme-modern input[type="date"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #d7d7d7;
+            border-radius: 12px;
+            font-size: 16px;
+            background: #fff;
+        }
+
+        body.theme-modern select:focus,
+        body.theme-modern input[type="date"]:focus {
+            outline: none;
+            border-color: #999;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+        }
+
+        body.theme-modern .main-button,
+        body.theme-modern .slot-button {
+            border: none;
+            border-radius: 12px;
+            background: #111;
+            color: white;
+            padding: 14px 18px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: transform 0.12s ease, opacity 0.12s ease;
+        }
+
+        body.theme-modern .main-button:hover,
+        body.theme-modern .slot-button:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+
+        body.theme-modern .main-button {
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        body.theme-modern .empty {
+            color: #777;
+            font-style: italic;
+            margin: 0;
+        }
+
+        body.theme-modern .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        body.theme-modern .slot-form {
+            margin: 0;
+        }
+
+        body.theme-modern .slot-card {
+            border: 1px solid #e3e3e3;
+            border-radius: 18px;
+            padding: 18px;
+            background: #fafafa;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        body.theme-modern .slot-time {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        body.theme-modern .slot-employee {
+            color: #666;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        body.theme-modern .info-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        body.theme-modern .info-pill {
+            background: #f4f4f4;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        body.theme-modern .error-box {
+            background: #fff4f4;
+            color: #9b1c1c;
+            border: 1px solid #f0caca;
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+        }
+
+        body.theme-modern .help-text {
+            font-size: 14px;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        body.theme-beauty {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            background: linear-gradient(180deg, #fff8fb 0%, #fdf2f8 100%);
+            color: #4a2f38;
+        }
+
+        body.theme-beauty .page {
+            min-height: 100vh;
+            padding: 32px 16px;
+        }
+
+        body.theme-beauty .container {
+            max-width: 920px;
+            margin: 0 auto;
+        }
+
+        body.theme-beauty .hero {
+            background: rgba(255,255,255,0.92);
+            border-radius: 26px;
+            padding: 34px;
+            box-shadow: 0 12px 34px rgba(179, 92, 122, 0.14);
+            margin-bottom: 24px;
+            border: 1px solid #f5d6df;
+            text-align: center;
+        }
+
+        body.theme-beauty .badge {
+            display: inline-block;
+            background: #fbe7ee;
+            color: #a14d68;
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-beauty h1 {
+            margin: 0 0 12px;
+            font-size: 38px;
+            line-height: 1.1;
+            color: #7a3e53;
+        }
+
+        body.theme-beauty .subtitle {
+            margin: 0;
+            color: #7b5c67;
+            font-size: 17px;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-beauty .card {
+            background: rgba(255,255,255,0.94);
+            border-radius: 24px;
+            padding: 28px;
+            box-shadow: 0 12px 34px rgba(179, 92, 122, 0.14);
+            margin-bottom: 24px;
+            border: 1px solid #f5d6df;
+        }
+
+        body.theme-beauty h2,
+        body.theme-beauty h3 {
+            margin-top: 0;
+            color: #7a3e53;
+        }
+
+        body.theme-beauty label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 15px;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-beauty .field {
+            margin-bottom: 18px;
+        }
+
+        body.theme-beauty select,
+        body.theme-beauty input[type="date"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #edc7d4;
+            border-radius: 14px;
+            font-size: 16px;
+            background: #fff;
+            color: #5c3e48;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-beauty select:focus,
+        body.theme-beauty input[type="date"]:focus {
+            outline: none;
+            border-color: #d98ea8;
+            box-shadow: 0 0 0 3px rgba(217, 142, 168, 0.14);
+        }
+
+        body.theme-beauty .main-button,
+        body.theme-beauty .slot-button {
+            border: none;
+            border-radius: 14px;
+            background: #b55c7a;
+            color: white;
+            padding: 14px 18px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: transform 0.12s ease, opacity 0.12s ease;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-beauty .main-button:hover,
+        body.theme-beauty .slot-button:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+
+        body.theme-beauty .main-button {
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        body.theme-beauty .empty {
+            color: #8a6874;
+            font-style: italic;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-beauty .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        body.theme-beauty .slot-form {
+            margin: 0;
+        }
+
+        body.theme-beauty .slot-card {
+            border: 1px solid #f1d4de;
+            border-radius: 20px;
+            padding: 18px;
+            background: #fff8fb;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        body.theme-beauty .slot-time {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #9a4f69;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-beauty .slot-employee {
+            color: #7d5f69;
+            margin-bottom: 16px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-beauty .info-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        body.theme-beauty .info-pill {
+            background: #fbe7ee;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            color: #9a4f69;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-beauty .error-box {
+            background: #fff3f6;
+            color: #a14362;
+            border: 1px solid #f0c4d2;
+            padding: 14px 16px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-beauty .help-text {
+            font-size: 14px;
+            color: #7d5f69;
+            margin-top: 8px;
+            font-family: Arial, sans-serif;
+        }
+
+        @media (max-width: 640px) {
+            body.theme-modern .hero,
+            body.theme-modern .card,
+            body.theme-beauty .hero,
+            body.theme-beauty .card {
+                padding: 22px;
+                border-radius: 18px;
+            }
+
+            body.theme-modern h1,
+            body.theme-beauty h1 {
+                font-size: 28px;
+            }
+
+            body.theme-modern .page,
+            body.theme-beauty .page {
+                padding: 18px 12px;
+            }
+
+            body.theme-modern .slot-time,
+            body.theme-beauty .slot-time {
+                font-size: 22px;
+            }
+
+            body.theme-classic .container {
+                margin: 20px 12px;
+                padding: 20px;
+            }
+
+            .business-logo {
+                max-width: 120px;
+                max-height: 90px;
+            }
+        }
+    </style>
+</head>
+
+<body class="theme-{{ business.theme }}">
+    {% if business.theme == "classic" %}
+        <div class="container">
+            {% if business.logo %}
+                <img src="{{ business.logo.url }}" alt="{{ business.name }}" class="business-logo">
+            {% endif %}
+
+            <h1>{{ business.name }}</h1>
+            <p>Reserva tu cita online de forma rápida.</p>
+
+            <h2>Selecciona tu cita</h2>
+
+            {% if error_message %}
+                <div class="error-box">
+                    {{ error_message }}
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                <label for="service_id">Servicio</label>
+                <select name="service_id" id="service_id" required>
+                    <option value="">-- Elige un servicio --</option>
+                    {% for service in services %}
+                        <option value="{{ service.id }}"
+                            {% if selected_service_id == service.id|stringformat:"s" %}selected{% endif %}>
+                            {{ service.name }} - {{ service.duration_minutes }} min
+                            {% if service.price %} - {{ service.price }} €{% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <label for="booking_date">Fecha</label>
+                <input type="date" name="booking_date" id="booking_date" value="{{ selected_date }}" required>
+
+                <label for="selected_employee_id">Profesional</label>
+                <select name="selected_employee_id" id="selected_employee_id">
+                    <option value="any">Me da igual</option>
+                </select>
+
+                {% if not selected_service_id %}
+                    <p class="help-text">Primero elige un servicio para ver qué profesionales pueden realizarlo.</p>
+                {% endif %}
+
+                <button type="submit">Ver horas disponibles</button>
+            </form>
+
+            <div class="slots">
+                <h3>Horas disponibles</h3>
+
+                {% if slots %}
+                    {% for slot in slots %}
+                        <form method="post" class="slot-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="service_id" value="{{ selected_service_id }}">
+                            <input type="hidden" name="booking_date" value="{{ selected_date }}">
+                            <input type="hidden" name="selected_employee_id" value="{{ selected_employee_id }}">
+                            <input type="hidden" name="start_time" value="{{ slot.start_time }}">
+                            <input type="hidden" name="employee_id" value="{{ slot.employee_id }}">
+
+                            <div class="slot-card">
+                                Hora: <strong>{{ slot.start_time }}</strong><br>
+                                Profesional: {{ slot.employee_name }}<br>
+
+                                <button type="submit" name="select_slot" value="1" class="slot-button">
+                                    Reservar esta hora
+                                </button>
+                            </div>
+                        </form>
+                    {% endfor %}
+                {% elif selected_service_id and selected_date %}
+                    <p class="empty">No hay horas disponibles para ese día.</p>
+                {% else %}
+                    <p class="empty">Selecciona un servicio, una fecha y un profesional para ver disponibilidad.</p>
+                {% endif %}
+            </div>
+        </div>
+
+    {% else %}
+        <div class="page">
+            <div class="container">
+                <section class="hero">
+                    {% if business.logo %}
+                        <img src="{{ business.logo.url }}" alt="{{ business.name }}" class="business-logo">
+                    {% endif %}
+
+                    <div class="badge">Reserva online</div>
+                    <h1>{{ business.name }}</h1>
+                    <p class="subtitle">Selecciona tu servicio, elige una fecha y reserva tu cita en pocos pasos.</p>
+                </section>
+
+                <section class="card">
+                    <h2>Elige tu cita</h2>
+
+                    {% if error_message %}
+                        <div class="error-box">
+                            {{ error_message }}
+                        </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="field">
+                            <label for="service_id">Servicio</label>
+                            <select name="service_id" id="service_id" required>
+                                <option value="">-- Elige un servicio --</option>
+                                {% for service in services %}
+                                    <option value="{{ service.id }}"
+                                        {% if selected_service_id == service.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ service.name }} - {{ service.duration_minutes }} min
+                                        {% if service.price %} - {{ service.price }} €{% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="booking_date">Fecha</label>
+                            <input type="date" name="booking_date" id="booking_date" value="{{ selected_date }}" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="selected_employee_id">Profesional</label>
+                            <select name="selected_employee_id" id="selected_employee_id">
+                                <option value="any">Me da igual</option>
+                            </select>
+
+                            {% if not selected_service_id %}
+                                <p class="help-text">Primero elige un servicio para ver qué profesionales pueden realizarlo.</p>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="main-button">Ver horas disponibles</button>
+                    </form>
+
+                    <div class="info-row">
+                        <div class="info-pill">Reserva rápida</div>
+                        <div class="info-pill">Disponibilidad en tiempo real</div>
+                        <div class="info-pill">Confirmación inmediata</div>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <h3>Horas disponibles</h3>
+
+                    {% if slots %}
+                        <div class="slots-grid">
+                            {% for slot in slots %}
+                                <form method="post" class="slot-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="service_id" value="{{ selected_service_id }}">
+                                    <input type="hidden" name="booking_date" value="{{ selected_date }}">
+                                    <input type="hidden" name="selected_employee_id" value="{{ selected_employee_id }}">
+                                    <input type="hidden" name="start_time" value="{{ slot.start_time }}">
+                                    <input type="hidden" name="employee_id" value="{{ slot.employee_id }}">
+
+                                    <div class="slot-card">
+                                        <div>
+                                            <div class="slot-time">{{ slot.start_time }}</div>
+                                            <div class="slot-employee">Profesional: {{ slot.employee_name }}</div>
+                                        </div>
+
+                                        <button type="submit" name="select_slot" value="1" class="slot-button">
+                                            Reservar esta hora
+                                        </button>
+                                    </div>
+                                </form>
+                            {% endfor %}
+                        </div>
+                    {% elif selected_service_id and selected_date %}
+                        <p class="empty">No hay horas disponibles para ese día. Prueba con otra fecha o servicio.</p>
+                    {% else %}
+                        <p class="empty">Selecciona un servicio, una fecha y un profesional para ver la disponibilidad.</p>
+                    {% endif %}
+                </section>
+            </div>
+        </div>
+    {% endif %}
+
+    <script>
+        const employeeServiceData = {{ employee_service_data_json|safe }};
+        const selectedEmployeeFromServer = "{{ selected_employee_id|default:'any' }}";
+
+        function updateEmployeeSelect() {
+            const serviceSelect = document.getElementById("service_id");
+            const employeeSelect = document.getElementById("selected_employee_id");
+
+            if (!serviceSelect || !employeeSelect) {
+                return;
+            }
+
+            const selectedServiceId = parseInt(serviceSelect.value);
+
+            employeeSelect.innerHTML = "";
+
+            const anyOption = document.createElement("option");
+            anyOption.value = "any";
+            anyOption.textContent = "Me da igual";
+            employeeSelect.appendChild(anyOption);
+
+            if (!selectedServiceId) {
+                employeeSelect.value = "any";
+                return;
+            }
+
+            const employeesForService = employeeServiceData.filter(function(item) {
+                return item.service_id === selectedServiceId;
+            });
+
+            employeesForService.forEach(function(item) {
+                const option = document.createElement("option");
+                option.value = item.employee_id;
+                option.textContent = item.employee_name;
+                employeeSelect.appendChild(option);
+            });
+
+            if (selectedEmployeeFromServer && selectedEmployeeFromServer !== "any") {
+                employeeSelect.value = selectedEmployeeFromServer;
+            } else {
+                employeeSelect.value = "any";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const serviceSelect = document.getElementById("service_id");
+
+            updateEmployeeSelect();
+
+            if (serviceSelect) {
+                serviceSelect.addEventListener("change", function() {
+                    updateEmployeeSelect();
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cancelar reserva | {{ business.name }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #111827;
+        }
+
+        .page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 520px;
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 14px 35px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            margin-top: 0;
+            margin-bottom: 24px;
+        }
+
+        .detail-box {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .detail-row {
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+
+        .detail-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 12px;
+            background: #b42318;
+            color: white;
+            padding: 14px 18px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #8f1c13;
+        }
+
+        .btn-secondary {
+            display: block;
+            margin-top: 12px;
+            text-align: center;
+            text-decoration: none;
+            color: #111827;
+            font-weight: 700;
+        }
+
+        .note {
+            color: #6b7280;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-top: 16px;
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+    <div class="card">
+        <h1>Cancelar reserva</h1>
+        <p class="subtitle">
+            Revisa los datos de tu cita antes de cancelarla.
+        </p>
+
+        <div class="detail-box">
+            <div class="detail-row">
+                <span class="label">Negocio</span>
+                {{ business.name }}
+            </div>
+
+            <div class="detail-row">
+                <span class="label">Servicio</span>
+                {{ booking.service.name }}
+            </div>
+
+            <div class="detail-row">
+                <span class="label">Profesional</span>
+                {{ booking.employee.full_name }}
+            </div>
+
+            <div class="detail-row">
+                <span class="label">Fecha</span>
+                {{ booking.booking_date }}
+            </div>
+
+            <div class="detail-row">
+                <span class="label">Hora</span>
+                {{ booking.start_time }} - {{ booking.end_time }}
+            </div>
+
+            <div class="detail-row">
+                <span class="label">Cliente</span>
+                {{ booking.customer.full_name }}
+            </div>
+        </div>
+
+        {% if cancel_error %}
+            <div class="error">
+                {{ cancel_error }}
+            </div>
+        {% endif %}
+
+        {% if can_cancel %}
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn">
+                    Sí, cancelar reserva
+                </button>
+            </form>
+
+            <p class="note">
+                Al cancelar, el negocio verá esta reserva como cancelada.
+            </p>
+        {% endif %}
+
+        <a href="/{{ business.slug }}/" class="btn-secondary">
+            Volver a la página de reservas
+        </a>
+    </div>
+</div>
+
+</body>
+</html>

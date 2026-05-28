@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Nueva reserva</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            color: #222;
+        }
+
+        .container {
+            max-width: 820px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 26px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        h1 { margin-top: 0; }
+
+        .muted { color: #666; }
+
+        label {
+            display: block;
+            margin-top: 16px;
+            margin-bottom: 7px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 9px;
+            font-size: 15px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: black;
+            color: white;
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 9px;
+            margin-top: 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .btn-secondary {
+            background: #555;
+            margin-left: 8px;
+        }
+
+        .error-box {
+            background: #fff4f4;
+            border: 1px solid #f0caca;
+            color: #9b1c1c;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 18px;
+        }
+
+        .slots-box {
+            margin-top: 20px;
+            padding: 16px;
+            background: #fafafa;
+            border-radius: 14px;
+            border: 1px solid #eee;
+        }
+
+        .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .slot-button {
+            padding: 10px;
+            border: 1px solid #111;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .slot-button:hover {
+            background: #111;
+            color: white;
+        }
+
+        .slot-button.selected {
+            background: #111;
+            color: white;
+        }
+
+        .empty {
+            color: #777;
+            font-style: italic;
+            margin-top: 10px;
+        }
+
+        .selected-time {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Nueva reserva</h1>
+            <p class="muted">Crea una reserva manual para {{ business.name }}.</p>
+
+            {% if error_message %}
+                <div class="error-box">
+                    {{ error_message }}
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                <label for="customer_name">Nombre y apellidos del cliente</label>
+                <input type="text" id="customer_name" name="customer_name" required>
+
+                <label for="customer_phone">Teléfono</label>
+                <input type="text" id="customer_phone" name="customer_phone" required>
+
+                <label for="customer_email">Email</label>
+                <input type="email" id="customer_email" name="customer_email">
+
+                <label for="service_id">Servicio</label>
+                <select id="service_id" name="service_id" required>
+                    <option value="">-- Elige servicio --</option>
+                    {% for service in services %}
+                        <option value="{{ service.id }}">
+                            {{ service.name }} - {{ service.duration_minutes }} min
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <label for="employee_id">Profesional</label>
+                <select id="employee_id" name="employee_id" required>
+                    <option value="">-- Primero elige un servicio --</option>
+                    {% for employee in employees %}
+                        <option value="{{ employee.id }}">
+                            {{ employee.full_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <label for="booking_date">Fecha</label>
+                <input type="date" id="booking_date" name="booking_date" required>
+
+                <input type="hidden" id="start_time" name="start_time" required>
+
+                <div class="slots-box">
+                    <strong>Horas disponibles</strong>
+                    <p class="muted">Elige servicio, profesional y fecha para ver los huecos.</p>
+
+                    <div id="slots-container" class="slots-grid"></div>
+                    <div id="empty-message" class="empty"></div>
+                    <div id="selected-time-label" class="selected-time"></div>
+                </div>
+
+                <button type="submit" class="btn">Crear reserva</button>
+                <a href="/dashboard/" class="btn btn-secondary">Volver</a>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const employeeServiceData = {{ employee_service_data_json|safe }};
+
+        const serviceSelect = document.getElementById("service_id");
+        const employeeSelect = document.getElementById("employee_id");
+        const dateInput = document.getElementById("booking_date");
+        const startTimeInput = document.getElementById("start_time");
+        const slotsContainer = document.getElementById("slots-container");
+        const emptyMessage = document.getElementById("empty-message");
+        const selectedTimeLabel = document.getElementById("selected-time-label");
+
+        function clearSlots() {
+            slotsContainer.innerHTML = "";
+            emptyMessage.textContent = "";
+            selectedTimeLabel.textContent = "";
+            startTimeInput.value = "";
+        }
+
+        function updateEmployeeOptions() {
+            const serviceId = serviceSelect.value;
+
+            employeeSelect.value = "";
+
+            Array.from(employeeSelect.options).forEach(option => {
+                if (!option.value) {
+                    option.textContent = serviceId ? "-- Elige profesional --" : "-- Primero elige un servicio --";
+                    option.hidden = false;
+                    option.disabled = false;
+                    return;
+                }
+
+                const employeeId = option.value;
+
+                const canDoService = employeeServiceData.some(item =>
+                    String(item.service_id) === String(serviceId) &&
+                    String(item.employee_id) === String(employeeId)
+                );
+
+                option.hidden = !canDoService;
+                option.disabled = !canDoService;
+            });
+
+            const visibleEmployees = Array.from(employeeSelect.options).filter(option => {
+                return option.value && !option.disabled;
+            });
+
+            if (serviceId && visibleEmployees.length === 0) {
+                emptyMessage.textContent = "No hay profesionales asignados a este servicio.";
+            }
+        }
+
+        function loadAvailability() {
+            const serviceId = serviceSelect.value;
+            const employeeId = employeeSelect.value;
+            const bookingDate = dateInput.value;
+
+            clearSlots();
+
+            if (!serviceId || !employeeId || !bookingDate) {
+                emptyMessage.textContent = "Completa servicio, profesional y fecha.";
+                return;
+            }
+
+            const url = `/dashboard/availability/?service_id=${serviceId}&employee_id=${employeeId}&date=${bookingDate}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const slots = data.slots || [];
+
+                    if (slots.length === 0) {
+                        emptyMessage.textContent = "No hay huecos disponibles para esa selección.";
+                        return;
+                    }
+
+                    slots.forEach(slot => {
+                        const button = document.createElement("button");
+                        button.type = "button";
+                        button.className = "slot-button";
+                        button.textContent = slot.start_time;
+
+                        button.addEventListener("click", function () {
+                            document.querySelectorAll(".slot-button").forEach(btn => {
+                                btn.classList.remove("selected");
+                            });
+
+                            button.classList.add("selected");
+                            startTimeInput.value = slot.start_time;
+                            selectedTimeLabel.textContent = `Hora seleccionada: ${slot.start_time}`;
+                        });
+
+                        slotsContainer.appendChild(button);
+                    });
+                })
+                .catch(() => {
+                    emptyMessage.textContent = "Error al cargar disponibilidad.";
+                });
+        }
+
+        serviceSelect.addEventListener("change", function () {
+            clearSlots();
+            updateEmployeeOptions();
+        });
+
+        employeeSelect.addEventListener("change", loadAvailability);
+        dateInput.addEventListener("change", loadAvailability);
+
+        document.addEventListener("DOMContentLoaded", function () {
+            clearSlots();
+            updateEmployeeOptions();
+        });
+    </script>
+</body>
+</html>

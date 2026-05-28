@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reservas online para negocios</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #111827;
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .navbar-inner {
+            max-width: 1150px;
+            margin: 0 auto;
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-block;
+            border: none;
+            border-radius: 12px;
+            background: #111827;
+            color: white;
+            padding: 12px 18px;
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #000;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #111827;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background: #f9fafb;
+        }
+
+        .hero {
+            padding: 80px 0 50px;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 36px;
+            align-items: center;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #075985;
+            border: 1px solid #bae6fd;
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+
+        h1 {
+            font-size: 48px;
+            line-height: 1.05;
+            margin: 0 0 18px;
+        }
+
+        .hero-text {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #4b5563;
+            margin-bottom: 26px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .hero-card {
+            background: white;
+            border-radius: 24px;
+            padding: 26px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+        }
+
+        .mock-title {
+            font-weight: 800;
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+
+        .mock-row {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .mock-row strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .section {
+            padding: 45px 0;
+        }
+
+        .section h2 {
+            font-size: 32px;
+            margin: 0 0 12px;
+            text-align: center;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #6b7280;
+            max-width: 680px;
+            margin: 0 auto 30px;
+            line-height: 1.5;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 18px;
+            padding: 22px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.04);
+        }
+
+        .feature-card h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 19px;
+        }
+
+        .feature-card p {
+            margin: 0;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        .cta {
+            background: #111827;
+            color: white;
+            border-radius: 28px;
+            padding: 38px;
+            text-align: center;
+            margin: 40px 0 60px;
+        }
+
+        .cta h2 {
+            margin-top: 0;
+            font-size: 32px;
+        }
+
+        .cta p {
+            color: #d1d5db;
+            font-size: 17px;
+            line-height: 1.5;
+            max-width: 680px;
+            margin: 0 auto 24px;
+        }
+
+        .cta .btn {
+            background: white;
+            color: #111827;
+        }
+
+        .footer {
+            padding: 26px 0;
+            text-align: center;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+            background: white;
+        }
+
+        @media (max-width: 850px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 38px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar-inner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .nav-actions {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="navbar-inner">
+        <div class="logo">
+            ReservasPro
+        </div>
+
+        <div class="nav-actions">
+            <a href="{% url 'login' %}" class="btn btn-secondary">
+                Iniciar sesión
+            </a>
+
+            <a href="https://wa.me/34637647369?text=Hola,%20quiero%20informaci%C3%B3n%20sobre%20el%20sistema%20de%20reservas" class="btn">
+                Pedir información
+            </a>
+        </div>
+    </div>
+</nav>
+
+<main>
+    <section class="hero">
+        <div class="container">
+            <div class="hero-grid">
+                <div>
+                    <div class="badge">
+                        Para peluquerías, barberías y centros de estética
+                    </div>
+
+                    <h1>
+                        Tu sistema de reservas online, listo para usar.
+                    </h1>
+
+                    <p class="hero-text">
+                        Permite que tus clientes reserven cita desde un enlace propio,
+                        gestiona servicios, empleados, horarios y reservas desde un panel privado,
+                        y evita perder tiempo contestando mensajes manualmente.
+                    </p>
+
+                    <div class="hero-actions">
+                        <a href="https://wa.me/34637647369?text=Hola,%20quiero%20informaci%C3%B3n%20sobre%20el%20sistema%20de%20reservas" class="btn">
+                            Solicitar información por WhatsApp
+                        </a>
+
+                        <a href="{% url 'demo_login' %}" class="btn btn-secondary">
+                            Ver demo
+                        </a>
+
+                        <a href="{% url 'login' %}" class="btn btn-secondary">
+                            Ya soy cliente
+                        </a>
+                    </div>
+                </div>
+
+                <div class="hero-card">
+                    <div class="mock-title">
+                        Ejemplo de panel de reservas
+                    </div>
+
+                    <div class="mock-row">
+                        <strong>09:30 - Corte mujer</strong>
+                        Cliente: María Martínez
+                    </div>
+
+                    <div class="mock-row">
+                        <strong>11:00 - Mechas</strong>
+                        Cliente: Laura García
+                    </div>
+
+                    <div class="mock-row">
+                        <strong>16:30 - Barbería</strong>
+                        Cliente: Pablo López
+                    </div>
+
+                    <p style="color:#6b7280; line-height:1.5; margin-bottom:0;">
+                        Cada negocio tiene su propio enlace de reservas y su propio panel privado.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <h2>Qué incluye</h2>
+            <p class="section-subtitle">
+                Una solución sencilla para que los negocios con citas puedan empezar a recibir reservas online sin complicaciones.
+            </p>
+
+            <div class="features">
+                <div class="feature-card">
+                    <h3>Web pública de reservas</h3>
+                    <p>
+                        Cada negocio tiene un enlace propio para compartir en Instagram, WhatsApp, Google o mediante QR.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Panel privado</h3>
+                    <p>
+                        El negocio puede ver sus reservas, gestionar servicios, empleados, horarios y bloqueos.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Reservas automáticas</h3>
+                    <p>
+                        El cliente elige servicio, fecha, hora y profesional disponible sin tener que escribir al negocio.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Cancelación por enlace</h3>
+                    <p>
+                        El cliente puede cancelar su reserva desde un enlace seguro incluido en el correo de confirmación.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Emails de confirmación</h3>
+                    <p>
+                        El cliente recibe la confirmación y el negocio recibe un aviso cuando entra una nueva reserva.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Multiempresa</h3>
+                    <p>
+                        Cada negocio tiene sus propios datos aislados: clientes, servicios, empleados, horarios y reservas.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <div class="cta">
+                <h2>¿Quieres usarlo en tu negocio?</h2>
+                <p>
+                    Escríbenos por WhatsApp, te explicamos cómo funciona y te damos de alta
+                    cuando quieras empezar. No hay registro público: activamos cada cuenta de forma manual.
+                </p>
+
+                <a href="https://wa.me/34637647369?text=Hola,%20quiero%20contratar%20el%20sistema%20de%20reservas%20para%20mi%20negocio" class="btn">
+                    Hablar por WhatsApp
+                </a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        Sistema de reservas online para pequeños negocios.
+    </div>
+</footer>
+
+</body>
+</html>

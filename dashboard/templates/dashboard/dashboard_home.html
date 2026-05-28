@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel empresa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            color: #222;
+        }
+
+        .container {
+            max-width: 1250px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+        }
+
+        h1 { margin-top: 0; margin-bottom: 8px; }
+        h2 { margin-top: 0; }
+
+        .muted { color: #666; }
+        .empty { color: #777; font-style: italic; }
+
+        .top-actions { margin-top: 14px; }
+
+        .demo-banner {
+            background: #e0f2fe;
+            border: 1px solid #bae6fd;
+            border-left: 5px solid #0284c7;
+            color: #075985;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 18px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .demo-banner strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 15px;
+        }
+
+        .public-link-box {
+            margin-top: 18px;
+            margin-bottom: 18px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-left: 5px solid #111827;
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .public-link-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .public-link-url {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            padding: 11px 12px;
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+        }
+
+        .public-link-help {
+            margin-bottom: 0;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: black;
+            color: white;
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-right: 10px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-secondary { background: #555; }
+
+        .btn-small {
+            padding: 7px 9px;
+            font-size: 12px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .btn-success { background: #16784b; }
+        .btn-danger { background: #b42318; }
+
+        .inline-form {
+            display: inline;
+        }
+
+        .filters {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            align-items: end;
+            margin-top: 18px;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 220px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        select,
+        input[type="date"] {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #ccc;
+            border-radius: 9px;
+            font-size: 14px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .week-title {
+            font-weight: bold;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .legend {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .legend-item {
+            font-size: 13px;
+            color: #555;
+        }
+
+        .legend-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .dot-booking { background: black; }
+        .dot-free { background: #19a463; }
+        .dot-blocked { background: #c2410c; }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+        }
+
+        .day-column {
+            background: #fafafa;
+            border: 1px solid #e7e7e7;
+            border-radius: 14px;
+            padding: 12px;
+            min-height: 280px;
+        }
+
+        .day-header {
+            margin-bottom: 12px;
+            border-bottom: 1px solid #e5e5e5;
+            padding-bottom: 8px;
+        }
+
+        .day-name {
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .day-date {
+            color: #666;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        .booking-card {
+            background: white;
+            border: 1px solid #e5e5e5;
+            border-left: 5px solid black;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+        }
+
+        .booking-card.status-cancelled {
+            opacity: 0.65;
+            border-left-color: #b42318;
+            background: #fff7f7;
+        }
+
+        .booking-card.status-completed {
+            border-left-color: #16784b;
+            background: #f4fff8;
+        }
+
+        .free-card {
+            background: #f0fff7;
+            border: 1px solid #ccefdc;
+            border-left: 5px solid #19a463;
+            border-radius: 12px;
+            padding: 9px 10px;
+            margin-bottom: 8px;
+        }
+
+        .blocked-card {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-left: 5px solid #c2410c;
+            border-radius: 12px;
+            padding: 9px 10px;
+            margin-bottom: 8px;
+        }
+
+        .booking-time,
+        .free-time,
+        .blocked-time {
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 6px;
+        }
+
+        .booking-service {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .booking-client {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 4px;
+        }
+
+        .booking-phone {
+            font-size: 13px;
+            color: #777;
+        }
+
+        .booking-employee {
+            font-size: 12px;
+            color: #777;
+            margin-top: 6px;
+        }
+
+        .booking-status {
+            display: inline-block;
+            font-size: 12px;
+            margin-top: 8px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #eee;
+            color: #444;
+        }
+
+        .status-confirmed-label {
+            background: #eef2ff;
+            color: #3730a3;
+        }
+
+        .status-completed-label {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-cancelled-label {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .booking-actions {
+            margin-top: 9px;
+        }
+
+        .free-label {
+            font-size: 13px;
+            color: #16784b;
+        }
+
+        .blocked-label {
+            font-size: 13px;
+            color: #c2410c;
+        }
+
+        .no-bookings {
+            font-size: 13px;
+            color: #aaa;
+            font-style: italic;
+        }
+
+        .notice {
+            background: #fff8df;
+            border: 1px solid #f0dfa4;
+            color: #6f5700;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .table-wrapper { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            min-width: 950px;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            font-size: 14px;
+            vertical-align: top;
+        }
+
+        th { background: #fafafa; }
+
+        tr:last-child td { border-bottom: none; }
+
+        @media (max-width: 1000px) {
+            .calendar-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                margin: 20px auto;
+            }
+
+            .card {
+                padding: 18px;
+                border-radius: 14px;
+            }
+
+            .calendar-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .day-column {
+                min-height: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="card" style="border-left: 5px solid #16784b; background: #f4fff8;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if request.user.username == "demo@reservaspro.com" %}
+            <div class="demo-banner">
+                <strong>Modo demo de solo lectura</strong>
+                Estás viendo un panel de ejemplo. Las acciones de crear, editar, cancelar, bloquear o eliminar están desactivadas.
+                La demo muestra siempre la semana fija del 25/05/2026.
+            </div>
+        {% endif %}
+
+        <div class="card">
+            {% if business %}
+                <h1>Panel de {{ business.name }}</h1>
+                <p class="muted">Aquí puedes ver las reservas de tu negocio por semana y por profesional.</p>
+
+                <div class="public-link-box">
+                    <div class="public-link-title">
+                        {% if request.user.username == "demo@reservaspro.com" %}
+                            Enlace público demo de reservas
+                        {% else %}
+                            Tu enlace público de reservas
+                        {% endif %}
+                    </div>
+
+                    <div class="public-link-url">
+                        {{ request.scheme }}://{{ request.get_host }}/{{ business.slug }}/
+                    </div>
+
+                    <p class="public-link-help">
+                        {% if request.user.username == "demo@reservaspro.com" %}
+                            Este es el enlace público que tendría una empresa para que sus clientes reserven online.
+                        {% else %}
+                            Comparte este enlace con tus clientes para que puedan reservar online.
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="top-actions">
+                    {% if request.user.username != "demo@reservaspro.com" %}
+                        <a class="btn" href="/dashboard/new-booking/">Nueva reserva</a>
+                        <a class="btn" href="/dashboard/services/">Servicios</a>
+                        <a class="btn" href="/dashboard/employees/">Empleados</a>
+                        <a class="btn" href="/dashboard/full-day-block/">Bloquear días</a>
+                    {% endif %}
+
+                    {% if request.user.is_superuser %}
+                        <a class="btn" href="/admin/">Abrir admin</a>
+                    {% endif %}
+
+                    <a class="btn" href="/{{ business.slug }}/">Ver web pública</a>
+
+                    {% if request.user.username != "demo@reservaspro.com" %}
+                        <a class="btn" href="/dashboard/new-block/">Bloquear horario</a>
+                        <a class="btn" href="/dashboard/business/settings/">Configuración</a>
+                        <a class="btn" href="{% url 'change_password' %}">Cambiar contraseña</a>
+                    {% endif %}
+
+                    <form method="post" action="{% url 'logout' %}" class="inline-form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-secondary">
+                            Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                <h1>Panel de empresa</h1>
+                <p class="empty">Tu usuario no tiene una empresa asignada.</p>
+
+                <div class="top-actions">
+                    <form method="post" action="{% url 'logout' %}" class="inline-form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-secondary">
+                            Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if business %}
+            <div class="card">
+                <h2>Filtros</h2>
+
+                <form method="get" class="filters">
+                    {% if request.user.username == "demo@reservaspro.com" %}
+                        <input type="hidden" name="week" value="2026-05-25">
+
+                        <div class="filter-group">
+                            <label>Semana</label>
+                            <div class="public-link-url">
+                                Semana demo fija: 25/05/2026
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="filter-group">
+                            <label for="week">Semana</label>
+                            <input type="date" id="week" name="week" value="{{ week_start|date:'Y-m-d' }}">
+                        </div>
+                    {% endif %}
+
+                    <div class="filter-group">
+                        <label for="employee">Empleado</label>
+                        <select id="employee" name="employee">
+                            <option value="all" {% if selected_employee == "all" %}selected{% endif %}>
+                                Todos los empleados
+                            </option>
+
+                            {% for employee in employees %}
+                                <option value="{{ employee.id }}"
+                                    {% if selected_employee == employee.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ employee.full_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn">Aplicar filtros</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="calendar-header">
+                    <div>
+                        <h2>Calendario semanal</h2>
+                        <div class="week-title">
+                            Semana del {{ week_start }} al {{ week_end }}
+                        </div>
+
+                        <div class="legend">
+                            <div class="legend-item">
+                                <span class="legend-dot dot-booking"></span> Reserva
+                            </div>
+
+                            {% if selected_employee_obj %}
+                                <div class="legend-item">
+                                    <span class="legend-dot dot-free"></span> Hueco libre
+                                </div>
+                            {% endif %}
+
+                            <div class="legend-item">
+                                <span class="legend-dot dot-blocked"></span> Bloqueado
+                            </div>
+                        </div>
+
+                        {% if not selected_employee_obj %}
+                            <div class="notice">
+                                Para ver huecos libres, selecciona un empleado concreto.
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if request.user.username != "demo@reservaspro.com" %}
+                        <div>
+                            <a class="btn btn-secondary" href="?week={{ previous_week|date:'Y-m-d' }}&employee={{ selected_employee }}">← Semana anterior</a>
+                            <a class="btn" href="?week={{ next_week|date:'Y-m-d' }}&employee={{ selected_employee }}">Semana siguiente →</a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="calendar-grid">
+                    {% for day in week_days %}
+                        <div class="day-column">
+                            <div class="day-header">
+                                <div class="day-name">{{ day.name }}</div>
+                                <div class="day-date">{{ day.date }}</div>
+                            </div>
+
+                            {% if day.items %}
+                                {% for item in day.items %}
+                                    {% if item.type == "booking" %}
+                                        <div class="booking-card status-{{ item.booking.status }}">
+                                            <div class="booking-time">
+                                                {{ item.start_time }} - {{ item.end_time }}
+                                            </div>
+
+                                            <div class="booking-service">
+                                                {{ item.booking.service.name }}
+                                            </div>
+
+                                            <div class="booking-client">
+                                                Cliente: {{ item.booking.customer.full_name }}
+                                            </div>
+
+                                            <div class="booking-phone">
+                                                Tel: {{ item.booking.customer.phone }}
+                                            </div>
+
+                                            <div class="booking-employee">
+                                                Profesional: {{ item.booking.employee.full_name }}
+                                            </div>
+
+                                            <div class="booking-status status-{{ item.booking.status }}-label">
+                                                {{ item.booking.get_status_display }}
+                                            </div>
+
+                                            {% if request.user.username != "demo@reservaspro.com" %}
+                                                <div class="booking-actions">
+                                                    {% if item.booking.status != "completed" %}
+                                                        <form method="post" action="/dashboard/booking/{{ item.booking.id }}/status/completed/" class="inline-form">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-small btn-success">
+                                                                Completar
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+
+                                                    {% if item.booking.status != "cancelled" %}
+                                                        <form method="post" action="/dashboard/booking/{{ item.booking.id }}/status/cancelled/" class="inline-form">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-small btn-danger">
+                                                                Cancelar
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+
+                                                    {% if item.booking.status != "confirmed" %}
+                                                        <form method="post" action="/dashboard/booking/{{ item.booking.id }}/status/confirmed/" class="inline-form">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-small">
+                                                                Reactivar
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+
+                                                    <a href="/dashboard/booking/{{ item.booking.id }}/edit/" class="btn btn-small">
+                                                        Editar
+                                                    </a>
+
+                                                    <form method="post" action="/dashboard/booking/{{ item.booking.id }}/delete/" class="inline-form">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-small btn-danger"
+                                                                onclick="return confirm('¿Seguro que quieres eliminar esta reserva?');">
+                                                            Eliminar
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% elif item.type == "free" %}
+                                        <div class="free-card">
+                                            <div class="free-time">
+                                                {{ item.start_time }} - {{ item.end_time }}
+                                            </div>
+                                            <div class="free-label">Libre</div>
+
+                                            {% if selected_employee_obj and request.user.username != "demo@reservaspro.com" %}
+                                                <form method="post" action="/dashboard/new-block/" style="margin-top: 8px;">
+                                                    {% csrf_token %}
+
+                                                    <input type="hidden" name="employee_id" value="{{ selected_employee_obj.id }}">
+                                                    <input type="hidden" name="date" value="{{ day.date|date:'Y-m-d' }}">
+                                                    <input type="hidden" name="start_time" value="{{ item.start_time }}">
+                                                    <input type="hidden" name="end_time" value="{{ item.end_time }}">
+                                                    <input type="hidden" name="next" value="/dashboard/?week={{ week_start|date:'Y-m-d' }}&employee={{ selected_employee_obj.id }}">
+
+                                                    <button type="submit" class="btn btn-small btn-danger">
+                                                        Bloquear
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    {% elif item.type == "blocked" %}
+                                        <div class="blocked-card">
+                                            <div class="blocked-time">
+                                                {{ item.start_time }} - {{ item.end_time }}
+                                            </div>
+                                            <div class="blocked-label">
+                                                Bloqueado - {{ item.blocked.employee.full_name }}
+                                            </div>
+
+                                            {% if request.user.username != "demo@reservaspro.com" %}
+                                                <form method="post" action="/dashboard/block/{{ item.blocked.id }}/delete/" style="margin-top: 8px;">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-small btn-secondary">
+                                                        Desbloquear
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <p class="no-bookings">Sin reservas{% if selected_employee_obj %} ni huecos{% endif %}</p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Listado de reservas filtradas</h2>
+
+                {% if reservations %}
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Hora</th>
+                                    <th>Cliente</th>
+                                    <th>Teléfono</th>
+                                    <th>Servicio</th>
+                                    <th>Profesional</th>
+                                    <th>Estado</th>
+                                    {% if request.user.username != "demo@reservaspro.com" %}
+                                        <th>Acciones</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in reservations %}
+                                    <tr>
+                                        <td>{{ booking.booking_date }}</td>
+                                        <td>{{ booking.start_time }} - {{ booking.end_time }}</td>
+                                        <td>{{ booking.customer.full_name }}</td>
+                                        <td>{{ booking.customer.phone }}</td>
+                                        <td>{{ booking.service.name }}</td>
+                                        <td>{{ booking.employee.full_name }}</td>
+                                        <td>{{ booking.get_status_display }}</td>
+
+                                        {% if request.user.username != "demo@reservaspro.com" %}
+                                            <td>
+                                                {% if booking.status != "completed" %}
+                                                    <form method="post" action="/dashboard/booking/{{ booking.id }}/status/completed/" class="inline-form">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-small btn-success">
+                                                            Completar
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+
+                                                {% if booking.status != "cancelled" %}
+                                                    <form method="post" action="/dashboard/booking/{{ booking.id }}/status/cancelled/" class="inline-form">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-small btn-danger">
+                                                            Cancelar
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+
+                                                {% if booking.status != "confirmed" %}
+                                                    <form method="post" action="/dashboard/booking/{{ booking.id }}/status/confirmed/" class="inline-form">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-small">
+                                                            Reactivar
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+
+                                                <a href="/dashboard/booking/{{ booking.id }}/edit/" class="btn btn-small">
+                                                    Editar
+                                                </a>
+
+                                                <form method="post" action="/dashboard/booking/{{ booking.id }}/delete/" class="inline-form">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-small btn-danger"
+                                                            onclick="return confirm('¿Seguro que quieres eliminar esta reserva?');">
+                                                        Eliminar
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        {% endif %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="empty">No hay reservas con estos filtros.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+    </div>
+</body>
+</html>

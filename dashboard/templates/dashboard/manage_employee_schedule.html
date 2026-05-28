@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Horario semanal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            color: #222;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        .muted {
+            color: #666;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 18px;
+            min-width: 900px;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+        th {
+            background: #fafafa;
+        }
+
+        input[type="time"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 9px;
+            font-size: 14px;
+        }
+
+        input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+
+        .btn {
+            display: inline-block;
+            background: black;
+            color: white;
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 9px;
+            margin-top: 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .btn-secondary {
+            background: #555;
+            margin-left: 8px;
+        }
+
+        .help {
+            background: #fff8df;
+            border: 1px solid #f0dfa4;
+            color: #6f5700;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-top: 16px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 700px) {
+            .container {
+                margin: 20px auto;
+            }
+
+            .card {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <div class="card">
+            <h1>Horario semanal</h1>
+            <p class="muted">Configura el horario de {{ employee.full_name }} en {{ business.name }}.</p>
+
+            <div class="help">
+                Marca los días activos. Si un día no trabaja, déjalo desmarcado.
+                La tarde es opcional.
+            </div>
+        </div>
+
+        <div class="card">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Día</th>
+                                <th>Activo</th>
+                                <th>Inicio mañana</th>
+                                <th>Fin mañana</th>
+                                <th>Inicio tarde</th>
+                                <th>Fin tarde</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for row in schedule_rows %}
+                                <tr>
+                                    <td><strong>{{ row.day_name }}</strong></td>
+
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            name="active_{{ row.weekday }}"
+                                            {% if row.active %}checked{% endif %}
+                                        >
+                                    </td>
+
+                                    <td>
+                                        <input
+                                            type="time"
+                                            name="start_morning_{{ row.weekday }}"
+                                            value="{{ row.start_morning }}"
+                                        >
+                                    </td>
+
+                                    <td>
+                                        <input
+                                            type="time"
+                                            name="end_morning_{{ row.weekday }}"
+                                            value="{{ row.end_morning }}"
+                                        >
+                                    </td>
+
+                                    <td>
+                                        <input
+                                            type="time"
+                                            name="start_afternoon_{{ row.weekday }}"
+                                            value="{{ row.start_afternoon }}"
+                                        >
+                                    </td>
+
+                                    <td>
+                                        <input
+                                            type="time"
+                                            name="end_afternoon_{{ row.weekday }}"
+                                            value="{{ row.end_afternoon }}"
+                                        >
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <button type="submit" class="btn">Guardar horario</button>
+                <a href="/dashboard/employees/" class="btn btn-secondary">Volver</a>
+            </form>
+        </div>
+
+    </div>
+</body>
+</html>

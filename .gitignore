@@ -1,0 +1,81 @@
+# ==========================
+# VARIABLES DE ENTORNO / SECRETOS
+# ==========================
+.env
+.env.*
+!.env.example
+
+# ==========================
+# BASE DE DATOS LOCAL
+# ==========================
+db.sqlite3
+*.sqlite3
+
+# ==========================
+# ENTORNOS VIRTUALES
+# ==========================
+.conda-env/
+venv/
+env/
+ENV/
+.venv/
+
+# ==========================
+# PYTHON
+# ==========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+
+# ==========================
+# DJANGO
+# ==========================
+*.log
+local_settings.py
+media/
+staticfiles/
+
+# ==========================
+# MIGRACIONES TEMPORALES / CACHE
+# ==========================
+*.pot
+*.mo
+
+# ==========================
+# IDE / EDITORES
+# ==========================
+.vscode/
+.idea/
+
+# ==========================
+# SISTEMA OPERATIVO
+# ==========================
+.DS_Store
+Thumbs.db
+
+# ==========================
+# JUPYTER / NOTEBOOKS
+# ==========================
+.ipynb_checkpoints/
+
+# ==========================
+# TESTS / COBERTURA
+# ==========================
+.coverage
+htmlcov/
+.pytest_cache/
+
+# ==========================
+# ARCHIVOS DE DEPLOY LOCAL
+# ==========================
+*.bak
+*.tmp
+
+# ==========================
+# ARCHIVOS ANTIGUOS / NO USADOS
+# ==========================
+config.py
+database.py

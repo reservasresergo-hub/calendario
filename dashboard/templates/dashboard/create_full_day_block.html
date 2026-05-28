@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Bloquear días</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            color: #222;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 26px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        h1 { margin-top: 0; }
+
+        .muted { color: #666; }
+
+        label {
+            display: block;
+            margin-top: 16px;
+            margin-bottom: 7px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 9px;
+            font-size: 15px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: black;
+            color: white;
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 9px;
+            margin-top: 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .btn-secondary {
+            background: #555;
+            margin-left: 8px;
+        }
+
+        .error-box {
+            background: #fff4f4;
+            border: 1px solid #f0caca;
+            color: #9b1c1c;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 18px;
+        }
+
+        .help-box {
+            background: #fff8df;
+            border: 1px solid #f0dfa4;
+            color: #6f5700;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Bloquear días</h1>
+            <p class="muted">Bloquea vacaciones, festivos o días completos sin disponibilidad.</p>
+
+            <div class="help-box">
+                Esto bloqueará el día completo para el empleado seleccionado.
+            </div>
+
+            {% if error_message %}
+                <div class="error-box">
+                    {{ error_message }}
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                <label for="employee_id">Empleado</label>
+                <select id="employee_id" name="employee_id" required>
+                    {% for employee in employees %}
+                        <option value="{{ employee.id }}">
+                            {{ employee.full_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <label for="start_date">Fecha inicio</label>
+                <input type="date" id="start_date" name="start_date" required>
+
+                <label for="end_date">Fecha fin</label>
+                <input type="date" id="end_date" name="end_date" required>
+
+                <button type="submit" class="btn">Bloquear días</button>
+                <a href="/dashboard/" class="btn btn-secondary">Volver</a>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
