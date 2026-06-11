@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.models import User
@@ -12,6 +12,7 @@ from businesses.models import Business
 from .forms import BusinessRegisterForm
 
 
+
 def home(request):
     """
     Página comercial pública del SaaS.
@@ -22,28 +23,65 @@ def home(request):
         request,
         "accounts/home.html"
     )
+
+
 def demo_login(request):
     """
-    Inicia sesión automáticamente como el usuario demo
-    y redirige al dashboard en la semana fija de demostración.
+    Acceso automático al panel demo de ReserGo.
+
+    Entra como usuario demo, asegura que tiene asignada la empresa demo
+    y redirige al dashboard en la semana donde existen reservas demo.
     """
 
-    user = authenticate(
+    User = get_user_model()
+
+    demo_user = User.objects.filter(username="demo@resergo.es").first()
+
+    if not demo_user:
+        messages.error(
+            request,
+            "La demo todavía no está disponible."
+        )
+        return redirect("/login/")
+
+    business = Business.objects.filter(slug="demo-peluqueria").first()
+
+    if business:
+        business.owner = demo_user
+        business.save()
+
+    login(request, demo_user)
+
+    return redirect("/dashboard/?week=2026-05-25")
+
+
+def aviso_legal(request):
+    return render(
         request,
-        username="demo@reservaspro.com",
-        password="Demo12345*"
+        "accounts/aviso_legal.html"
     )
 
-    if user is not None:
-        login(request, user)
-        return redirect("/dashboard/?week=2026-05-25")
 
-    messages.error(
+def politica_privacidad(request):
+    return render(
         request,
-        "No se pudo acceder a la demo. Revisa que el usuario demo exista."
+        "accounts/politica_privacidad.html"
     )
 
-    return redirect("home")
+
+def politica_cookies(request):
+    return render(
+        request,
+        "accounts/politica_cookies.html"
+    )
+
+
+def condiciones_uso(request):
+    return render(
+        request,
+        "accounts/condiciones_uso.html"
+    )
+
 
 def generate_unique_business_slug(business_name):
     """
@@ -249,3 +287,29 @@ def custom_csrf_failure(request, reason=""):
         return redirect("register_business")
 
     return redirect("login")
+def aviso_legal(request):
+    return render(
+        request,
+        "accounts/aviso_legal.html"
+    )
+
+
+def politica_privacidad(request):
+    return render(
+        request,
+        "accounts/politica_privacidad.html"
+    )
+
+
+def politica_cookies(request):
+    return render(
+        request,
+        "accounts/politica_cookies.html"
+    )
+
+
+def condiciones_uso(request):
+    return render(
+        request,
+        "accounts/condiciones_uso.html"
+    )

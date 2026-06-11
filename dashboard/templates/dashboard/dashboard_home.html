@@ -104,6 +104,14 @@
 
         .btn-secondary { background: #555; }
 
+        .btn-disabled {
+            background: #9ca3af;
+            color: #f3f4f6;
+            opacity: 0.65;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
         .btn-small {
             padding: 7px 9px;
             font-size: 12px;
@@ -402,7 +410,7 @@
             {% endfor %}
         {% endif %}
 
-        {% if request.user.username == "demo@reservaspro.com" %}
+        {% if is_demo_user %}
             <div class="demo-banner">
                 <strong>Modo demo de solo lectura</strong>
                 Estás viendo un panel de ejemplo. Las acciones de crear, editar, cancelar, bloquear o eliminar están desactivadas.
@@ -417,7 +425,7 @@
 
                 <div class="public-link-box">
                     <div class="public-link-title">
-                        {% if request.user.username == "demo@reservaspro.com" %}
+                        {% if is_demo_user %}
                             Enlace público demo de reservas
                         {% else %}
                             Tu enlace público de reservas
@@ -429,7 +437,7 @@
                     </div>
 
                     <p class="public-link-help">
-                        {% if request.user.username == "demo@reservaspro.com" %}
+                        {% if is_demo_user %}
                             Este es el enlace público que tendría una empresa para que sus clientes reserven online.
                         {% else %}
                             Comparte este enlace con tus clientes para que puedan reservar online.
@@ -438,7 +446,12 @@
                 </div>
 
                 <div class="top-actions">
-                    {% if request.user.username != "demo@reservaspro.com" %}
+                    {% if is_demo_user %}
+                        <span class="btn btn-disabled">Nueva reserva</span>
+                        <span class="btn btn-disabled">Servicios</span>
+                        <span class="btn btn-disabled">Empleados</span>
+                        <span class="btn btn-disabled">Bloquear días</span>
+                    {% else %}
                         <a class="btn" href="/dashboard/new-booking/">Nueva reserva</a>
                         <a class="btn" href="/dashboard/services/">Servicios</a>
                         <a class="btn" href="/dashboard/employees/">Empleados</a>
@@ -451,7 +464,11 @@
 
                     <a class="btn" href="/{{ business.slug }}/">Ver web pública</a>
 
-                    {% if request.user.username != "demo@reservaspro.com" %}
+                    {% if is_demo_user %}
+                        <span class="btn btn-disabled">Bloquear horario</span>
+                        <span class="btn btn-disabled">Configuración</span>
+                        <span class="btn btn-disabled">Cambiar contraseña</span>
+                    {% else %}
                         <a class="btn" href="/dashboard/new-block/">Bloquear horario</a>
                         <a class="btn" href="/dashboard/business/settings/">Configuración</a>
                         <a class="btn" href="{% url 'change_password' %}">Cambiar contraseña</a>
@@ -484,7 +501,7 @@
                 <h2>Filtros</h2>
 
                 <form method="get" class="filters">
-                    {% if request.user.username == "demo@reservaspro.com" %}
+                    {% if is_demo_user %}
                         <input type="hidden" name="week" value="2026-05-25">
 
                         <div class="filter-group">
@@ -551,12 +568,15 @@
                         {% endif %}
                     </div>
 
-                    {% if request.user.username != "demo@reservaspro.com" %}
-                        <div>
+                    <div>
+                        {% if is_demo_user %}
+                            <span class="btn btn-secondary btn-disabled">← Semana anterior</span>
+                            <span class="btn btn-disabled">Semana siguiente →</span>
+                        {% else %}
                             <a class="btn btn-secondary" href="?week={{ previous_week|date:'Y-m-d' }}&employee={{ selected_employee }}">← Semana anterior</a>
                             <a class="btn" href="?week={{ next_week|date:'Y-m-d' }}&employee={{ selected_employee }}">Semana siguiente →</a>
-                        </div>
-                    {% endif %}
+                        {% endif %}
+                    </div>
                 </div>
 
                 <div class="calendar-grid">
@@ -595,7 +615,7 @@
                                                 {{ item.booking.get_status_display }}
                                             </div>
 
-                                            {% if request.user.username != "demo@reservaspro.com" %}
+                                            {% if not is_demo_user %}
                                                 <div class="booking-actions">
                                                     {% if item.booking.status != "completed" %}
                                                         <form method="post" action="/dashboard/booking/{{ item.booking.id }}/status/completed/" class="inline-form">
@@ -645,7 +665,7 @@
                                             </div>
                                             <div class="free-label">Libre</div>
 
-                                            {% if selected_employee_obj and request.user.username != "demo@reservaspro.com" %}
+                                            {% if selected_employee_obj and not is_demo_user %}
                                                 <form method="post" action="/dashboard/new-block/" style="margin-top: 8px;">
                                                     {% csrf_token %}
 
@@ -670,7 +690,7 @@
                                                 Bloqueado - {{ item.blocked.employee.full_name }}
                                             </div>
 
-                                            {% if request.user.username != "demo@reservaspro.com" %}
+                                            {% if not is_demo_user %}
                                                 <form method="post" action="/dashboard/block/{{ item.blocked.id }}/delete/" style="margin-top: 8px;">
                                                     {% csrf_token %}
                                                     <button type="submit" class="btn btn-small btn-secondary">
@@ -704,7 +724,7 @@
                                     <th>Servicio</th>
                                     <th>Profesional</th>
                                     <th>Estado</th>
-                                    {% if request.user.username != "demo@reservaspro.com" %}
+                                    {% if not is_demo_user %}
                                         <th>Acciones</th>
                                     {% endif %}
                                 </tr>
@@ -720,7 +740,7 @@
                                         <td>{{ booking.employee.full_name }}</td>
                                         <td>{{ booking.get_status_display }}</td>
 
-                                        {% if request.user.username != "demo@reservaspro.com" %}
+                                        {% if not is_demo_user %}
                                             <td>
                                                 {% if booking.status != "completed" %}
                                                     <form method="post" action="/dashboard/booking/{{ booking.id }}/status/completed/" class="inline-form">

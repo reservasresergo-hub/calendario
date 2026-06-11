@@ -1,27 +1,17 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu May 21 15:32:44 2026
-
-@author: PRL
-"""
-
 from django.contrib import messages
+from django.http import JsonResponse
 from django.shortcuts import redirect
 
 
 class DemoReadOnlyMiddleware:
     """
-    Bloquea acciones de escritura para el usuario demo.
+    Bloquea cualquier acción de escritura para el usuario demo.
 
-    El usuario demo puede ver el panel, pero no puede modificar datos.
+    El usuario demo puede navegar por el panel y ver los datos,
+    pero no puede crear, editar, borrar, cancelar ni modificar información.
     """
 
-    DEMO_USERNAME = "demo@reservaspro.com"
-
-    BLOCKED_PATH_PREFIXES = [
-        "/dashboard/",
-        "/change-password/",
-    ]
+    DEMO_USERNAME = "demo@resergo.es"
 
     BLOCKED_METHODS = [
         "POST",
@@ -30,30 +20,54 @@ class DemoReadOnlyMiddleware:
         "DELETE",
     ]
 
+    ALLOWED_PATHS = [
+        "/logout/",
+        "/demo/",
+    ]
+
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
         user = getattr(request, "user", None)
 
-        if (
+        is_demo_user = (
             user
             and user.is_authenticated
             and user.username == self.DEMO_USERNAME
-            and request.method in self.BLOCKED_METHODS
-            and self.is_blocked_path(request.path)
-        ):
-            messages.error(
+        )
+
+        if is_demo_user and request.method in self.BLOCKED_METHODS:
+            if any(request.path.startswith(path) for path in self.ALLOWED_PATHS):
+                return self.get_response(request)
+
+            if (
+                request.headers.get("x-requested-with") == "XMLHttpRequest"
+                or request.path.startswith("/api/")
+            ):
+                return JsonResponse(
+                    {
+                        "error": (
+                            "La demo es solo de lectura. "
+                            "No se pueden guardar cambios."
+                        )
+                    },
+                    status=403
+                )
+
+            messages.warning(
                 request,
-                "La demo es solo lectura. No se pueden guardar cambios."
+                (
+                    "La demo es solo de lectura. "
+                    "Puedes navegar por el panel, pero no puedes guardar cambios."
+                )
             )
-            return redirect("dashboard-home")
+
+            return redirect(
+                request.META.get(
+                    "HTTP_REFERER",
+                    "/dashboard/?week=2026-05-25"
+                )
+            )
 
         return self.get_response(request)
-
-    def is_blocked_path(self, path):
-        for prefix in self.BLOCKED_PATH_PREFIXES:
-            if path.startswith(prefix):
-                return True
-
-        return False

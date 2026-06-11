@@ -36,19 +36,34 @@ def dashboard_home(request):
     week_param = request.GET.get("week")
     employee_param = request.GET.get("employee", "all")
 
-    if week_param:
-        try:
-            selected_day = datetime.strptime(week_param, "%Y-%m-%d").date()
-        except ValueError:
-            selected_day = date.today()
+    is_demo_user = (
+        request.user.is_authenticated
+        and request.user.username == "demo@resergo.es"
+    )
+
+    if is_demo_user:
+        selected_day = date(2026, 5, 25)
     else:
-        selected_day = date.today()
+        if week_param:
+            try:
+                selected_day = datetime.strptime(
+                    week_param,
+                    "%Y-%m-%d"
+                ).date()
+            except ValueError:
+                selected_day = date.today()
+        else:
+            selected_day = date.today()
 
     week_start = selected_day - timedelta(days=selected_day.weekday())
     week_end = week_start + timedelta(days=6)
 
-    previous_week = week_start - timedelta(days=7)
-    next_week = week_start + timedelta(days=7)
+    if is_demo_user:
+        previous_week = week_start
+        next_week = week_start
+    else:
+        previous_week = week_start - timedelta(days=7)
+        next_week = week_start + timedelta(days=7)
 
     employees = []
     reservations = []
@@ -257,6 +272,7 @@ def dashboard_home(request):
         "week_end": week_end,
         "previous_week": previous_week,
         "next_week": next_week,
+        "is_demo_user": is_demo_user,
     }
 
     return render(request, "dashboard/dashboard_home.html", context)

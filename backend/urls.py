@@ -20,27 +20,19 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-from accounts.views import login_user, logout_user
-
+from accounts.views import login_user, logout_user, demo_login
 
 urlpatterns = [
     path("admin/", admin.site.urls),
 
     path("api/", include("api.urls")),
 
-    path(
-        "login/",
-        login_user,
-        name="login"
-    ),
+    path("login/",login_user,name="login"),
 
-    path(
-        "logout/",
-        logout_user,
-        name="logout"
-    ),
+    path("logout/",logout_user,name="logout"),
 
     path("dashboard/", include("dashboard.urls")),
+    path("demo/", demo_login, name="demo_login"),
 
     path("", include("accounts.urls")),
 
