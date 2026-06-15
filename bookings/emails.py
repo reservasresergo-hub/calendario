@@ -1,7 +1,10 @@
 from django.core.mail import send_mail
 from django.conf import settings
+import logging
 
 from automations.models import EmailTemplate
+
+logger = logging.getLogger(__name__)
 
 
 def get_booking_email_context(booking, cancel_url=""):
@@ -42,6 +45,7 @@ def render_template_text(template_text, context):
 
     try:
         return template_text.format(**context)
+
     except KeyError as e:
         missing_key = str(e).replace("'", "")
         return (
@@ -86,18 +90,34 @@ def add_cancel_url_if_needed(message, template_body, cancel_url):
 def send_booking_confirmation_email(booking, cancel_url=""):
     """
     Envía email editable de confirmación al cliente.
+
+    Importante:
+    - Si el cliente no tiene email, no envía nada.
+    - Si el negocio tiene desactivado el email al cliente, no envía nada.
+    - Si Brevo/SMTP falla, NO rompe la reserva.
+    - Devuelve True si se envía correctamente.
+    - Devuelve False si no se envía o falla.
     """
 
     customer = booking.customer
     business = booking.business
 
     if not customer.email:
-        return
+        logger.info(
+            "Reserva %s sin email de cliente. No se envía confirmación.",
+            booking.id
+        )
+        return False
 
     template = get_or_create_email_template(business)
 
     if not template.send_customer_email:
-        return
+        logger.info(
+            "El negocio %s tiene desactivado el email al cliente. Reserva %s.",
+            business.id,
+            booking.id
+        )
+        return False
 
     context = get_booking_email_context(
         booking,
@@ -120,13 +140,31 @@ def send_booking_confirmation_email(booking, cancel_url=""):
         cancel_url=cancel_url
     )
 
-    send_mail(
-        subject=subject,
-        message=message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[customer.email],
-        fail_silently=False,
-    )
+    try:
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[customer.email],
+            fail_silently=False,
+        )
+
+        logger.info(
+            "Email de confirmación enviado correctamente. Reserva %s. Cliente: %s",
+            booking.id,
+            customer.email
+        )
+
+        return True
+
+    except Exception:
+        logger.exception(
+            "Error enviando email de confirmación. Reserva %s. Cliente: %s",
+            booking.id,
+            customer.email
+        )
+
+        return False
 
 
 def send_booking_emails(booking, cancel_url=""):
@@ -136,9 +174,24 @@ def send_booking_emails(booking, cancel_url=""):
     Decisión actual de ReserGo:
     - Se envía email de confirmación al cliente.
     - No se envía email al negocio.
+
+    Importante:
+    - Esta función nunca debe romper la creación de una reserva.
+    - Si el email falla, se registra el error en logs y devuelve False.
     """
 
-    send_booking_confirmation_email(
-        booking,
-        cancel_url=cancel_url
-    )
+    try:
+        customer_email_sent = send_booking_confirmation_email(
+            booking,
+            cancel_url=cancel_url
+        )
+
+        return customer_email_sent
+
+    except Exception:
+        logger.exception(
+            "Error general enviando emails de la reserva %s",
+            booking.id
+        )
+
+        return False

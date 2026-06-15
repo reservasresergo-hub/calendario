@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import json
+import logging
 
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
@@ -11,6 +12,9 @@ from bookings.utils import get_available_slots, has_conflict
 from customers.models import Customer
 from bookings.models import Booking
 from bookings.emails import send_booking_emails
+
+
+logger = logging.getLogger(__name__)
 
 
 def booking_home(request, business_slug):
@@ -188,13 +192,32 @@ def booking_home(request, business_slug):
                     )
                 )
 
+                # =====================================================
+                # ENVIAR EMAIL SIN ROMPER LA RESERVA
+                # =====================================================
+                # Importante:
+                # La reserva ya está creada.
+                # Si Brevo/SMTP falla o tarda, NO debe aparecer error 500.
+                # El fallo queda registrado en Render Logs.
+                # =====================================================
+
                 try:
-                    send_booking_emails(
+                    email_sent = send_booking_emails(
                         booking,
                         cancel_url=cancel_url
                     )
-                except TypeError:
-                    send_booking_emails(booking)
+
+                    if not email_sent:
+                        logger.warning(
+                            "La reserva %s se creó correctamente, pero el email no se envió.",
+                            booking.id
+                        )
+
+                except Exception:
+                    logger.exception(
+                        "La reserva %s se creó correctamente, pero falló el envío de email.",
+                        booking.id
+                    )
 
                 return render(
                     request,
