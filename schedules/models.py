@@ -54,3 +54,4 @@ class BlockedSlot(models.Model):
 
     def __str__(self):
         return f"{self.employee.full_name} bloqueado {self.date} {self.start_time}-{self.end_time}"
+    
