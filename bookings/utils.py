@@ -124,15 +124,17 @@ def get_available_slots(
         )
 
         for schedule in schedules:
-            time_ranges = [
-                (schedule.start_time_morning, schedule.end_time_morning)
-            ]
+            time_ranges = []
+
+            if schedule.start_time_morning and schedule.end_time_morning:
+                time_ranges.append(
+                    (schedule.start_time_morning, schedule.end_time_morning)
+                )
 
             if schedule.start_time_afternoon and schedule.end_time_afternoon:
                 time_ranges.append(
                     (schedule.start_time_afternoon, schedule.end_time_afternoon)
                 )
-
             for range_start, range_end in time_ranges:
                 current = datetime.combine(booking_date, range_start)
                 schedule_end = datetime.combine(booking_date, range_end)

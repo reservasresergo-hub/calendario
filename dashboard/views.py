@@ -171,12 +171,15 @@ def dashboard_home(request):
                     })
 
                 for schedule in schedules:
-                    time_ranges = [
-                        (
-                            schedule.start_time_morning,
-                            schedule.end_time_morning
+                    time_ranges = []
+
+                    if schedule.start_time_morning and schedule.end_time_morning:
+                        time_ranges.append(
+                            (
+                                schedule.start_time_morning,
+                                schedule.end_time_morning
+                            )
                         )
-                    ]
 
                     if (
                         schedule.start_time_afternoon
@@ -192,9 +195,10 @@ def dashboard_home(request):
                     for range_start, range_end in time_ranges:
                         current = datetime.combine(current_day, range_start)
                         schedule_end = datetime.combine(current_day, range_end)
+                        slot_step = timedelta(minutes=business.slot_interval_minutes)
 
-                        while current + timedelta(minutes=30) <= schedule_end:
-                            slot_end = current + timedelta(minutes=30)
+                        while current + slot_step <= schedule_end:
+                            slot_end = current + slot_step
 
                             slot_has_conflict = any(
                                 overlaps(
@@ -214,7 +218,7 @@ def dashboard_home(request):
                                     "end_time": slot_end.strftime("%H:%M"),
                                 })
 
-                            current += timedelta(minutes=30)
+                            current += slot_step
 
                 day_items.sort(key=lambda item: item["start_dt"])
 
@@ -592,6 +596,8 @@ def delete_blocked_slot(request, block_id):
     block.delete()
     messages.success(request, "Horario desbloqueado correctamente.")
     return redirect("dashboard-home")
+
+
 @login_required
 def edit_booking(request, booking_id):
     business = get_current_business(request)
@@ -1009,24 +1015,27 @@ def manage_employee_schedule(request, employee_id):
             start_afternoon = request.POST.get(f"start_afternoon_{weekday}")
             end_afternoon = request.POST.get(f"end_afternoon_{weekday}")
 
-            if active and start_morning and end_morning:
+            has_morning = bool(start_morning and end_morning)
+            has_afternoon = bool(start_afternoon and end_afternoon)
+
+            if active and (has_morning or has_afternoon):
                 schedule, created = WeeklySchedule.objects.get_or_create(
                     employee=employee,
                     weekday=weekday,
                     defaults={
-                        "start_time_morning": start_morning,
-                        "end_time_morning": end_morning,
-                        "start_time_afternoon": start_afternoon or None,
-                        "end_time_afternoon": end_afternoon or None,
+                        "start_time_morning": start_morning if has_morning else None,
+                        "end_time_morning": end_morning if has_morning else None,
+                        "start_time_afternoon": start_afternoon if has_afternoon else None,
+                        "end_time_afternoon": end_afternoon if has_afternoon else None,
                         "active": True,
                     }
                 )
 
                 if not created:
-                    schedule.start_time_morning = start_morning
-                    schedule.end_time_morning = end_morning
-                    schedule.start_time_afternoon = start_afternoon or None
-                    schedule.end_time_afternoon = end_afternoon or None
+                    schedule.start_time_morning = start_morning if has_morning else None
+                    schedule.end_time_morning = end_morning if has_morning else None
+                    schedule.start_time_afternoon = start_afternoon if has_afternoon else None
+                    schedule.end_time_afternoon = end_afternoon if has_afternoon else None
                     schedule.active = True
                     schedule.save()
 
@@ -1181,6 +1190,7 @@ def edit_business(request):
         business.max_advance_days = int(
             request.POST.get("max_advance_days") or 31
         )
+
         allowed_intervals = [choice[0] for choice in business.SLOT_INTERVAL_CHOICES]
         slot_interval = int(
             request.POST.get("slot_interval_minutes") or business.slot_interval_minutes

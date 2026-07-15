@@ -21,9 +21,9 @@ class WeeklySchedule(models.Model):
     )
     weekday = models.IntegerField(choices=WEEKDAY_CHOICES)
 
-    start_time_morning = models.TimeField()
-    end_time_morning = models.TimeField()
-
+    start_time_morning = models.TimeField(blank=True, null=True)
+    end_time_morning = models.TimeField(blank=True, null=True)
+    
     start_time_afternoon = models.TimeField(blank=True, null=True)
     end_time_afternoon = models.TimeField(blank=True, null=True)
 

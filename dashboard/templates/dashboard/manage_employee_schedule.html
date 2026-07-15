@@ -90,6 +90,14 @@
             margin-left: 8px;
         }
 
+        .copy-btn {
+            margin-top: 0;
+            margin-left: 0;
+            padding: 8px 12px;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
         .help {
             background: #fff8df;
             border: 1px solid #f0dfa4;
@@ -121,8 +129,18 @@
 
             <div class="help">
                 Marca los días activos. Si un día no trabaja, déjalo desmarcado.
-                La tarde es opcional.
+                Puedes rellenar solo la mañana, solo la tarde, o las dos —
+                lo que necesite cada día.
             </div>
+        </div>
+
+        <div class="card">
+            <p class="muted" style="margin-top:0;">
+                Consejo: rellena un día y pulsa "Copiar a todos" en su fila
+                para repetir ese mismo horario en el resto de la semana.
+                Después solo tienes que ajustar a mano los días que sean
+                distintos.
+            </p>
         </div>
 
         <div class="card">
@@ -139,12 +157,13 @@
                                 <th>Fin mañana</th>
                                 <th>Inicio tarde</th>
                                 <th>Fin tarde</th>
+                                <th>Copiar</th>
                             </tr>
                         </thead>
 
                         <tbody>
                             {% for row in schedule_rows %}
-                                <tr>
+                                <tr data-weekday="{{ row.weekday }}">
                                     <td><strong>{{ row.day_name }}</strong></td>
 
                                     <td>
@@ -186,6 +205,16 @@
                                             value="{{ row.end_afternoon }}"
                                         >
                                     </td>
+
+                                    <td>
+                                        <button
+                                            type="button"
+                                            class="btn btn-secondary copy-btn"
+                                            onclick="copyRowToAll({{ row.weekday }})"
+                                        >
+                                            Copiar a todos
+                                        </button>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -198,5 +227,51 @@
         </div>
 
     </div>
+
+    <script>
+        function copyRowToAll(sourceWeekday) {
+            const sourceRow = document.querySelector(
+                'tr[data-weekday="' + sourceWeekday + '"]'
+            );
+
+            if (!sourceRow) {
+                return;
+            }
+
+            const sourceActive = sourceRow.querySelector(
+                'input[name="active_' + sourceWeekday + '"]'
+            ).checked;
+
+            const sourceStartMorning = sourceRow.querySelector(
+                'input[name="start_morning_' + sourceWeekday + '"]'
+            ).value;
+
+            const sourceEndMorning = sourceRow.querySelector(
+                'input[name="end_morning_' + sourceWeekday + '"]'
+            ).value;
+
+            const sourceStartAfternoon = sourceRow.querySelector(
+                'input[name="start_afternoon_' + sourceWeekday + '"]'
+            ).value;
+
+            const sourceEndAfternoon = sourceRow.querySelector(
+                'input[name="end_afternoon_' + sourceWeekday + '"]'
+            ).value;
+
+            document.querySelectorAll("tr[data-weekday]").forEach(function(row) {
+                const weekday = row.getAttribute("data-weekday");
+
+                if (weekday === String(sourceWeekday)) {
+                    return;
+                }
+
+                row.querySelector('input[name="active_' + weekday + '"]').checked = sourceActive;
+                row.querySelector('input[name="start_morning_' + weekday + '"]').value = sourceStartMorning;
+                row.querySelector('input[name="end_morning_' + weekday + '"]').value = sourceEndMorning;
+                row.querySelector('input[name="start_afternoon_' + weekday + '"]').value = sourceStartAfternoon;
+                row.querySelector('input[name="end_afternoon_' + weekday + '"]').value = sourceEndAfternoon;
+            });
+        }
+    </script>
 </body>
 </html>
