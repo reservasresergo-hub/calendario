@@ -186,6 +186,30 @@
             color: #7a3e53;
         }
 
+        .theme-preview-bold {
+            background: linear-gradient(180deg, #fff9f7 0%, #fdf0ed 100%);
+            border: 1px solid #fbdbd3;
+            border-radius: 12px;
+            font-family: Arial, sans-serif;
+            color: #b8371f;
+        }
+
+        .theme-preview-nature {
+            background: linear-gradient(180deg, #f4faf6 0%, #eaf5ee 100%);
+            border: 1px solid #d3e8da;
+            border-radius: 18px;
+            font-family: Arial, sans-serif;
+            color: #2f5233;
+        }
+
+        .theme-preview-elegant {
+            background: linear-gradient(180deg, #faf8f3 0%, #f5f1e6 100%);
+            border: 1px solid #e8dfc4;
+            border-radius: 8px;
+            font-family: Georgia, "Times New Roman", serif;
+            color: #1a2238;
+        }
+
         .theme-preview-btn {
             display: inline-block;
             margin-top: 8px;
@@ -201,7 +225,25 @@
             border-radius: 10px;
             font-family: Arial, sans-serif;
         }
+
+        .theme-preview-bold .theme-preview-btn {
+            background: #e8543e;
+            border-radius: 8px;
+        }
+
+        .theme-preview-nature .theme-preview-btn {
+            background: #4a7c59;
+            border-radius: 12px;
+        }
+
+        .theme-preview-elegant .theme-preview-btn {
+            background: #1a2238;
+            color: #f0e8cf;
+            border-radius: 6px;
+            font-family: Arial, sans-serif;
+        }
     </style>
+{% include "dashboard/_theme_vars.html" %}
 </head>
 
 <body>
@@ -284,6 +326,48 @@
                             <div class="theme-preview-btn">Ver horas disponibles</div>
                         </div>
                     </label>
+
+                    <label class="theme-option">
+                        <input
+                            type="radio"
+                            name="theme"
+                            value="bold"
+                            {% if business.theme == "bold" %}checked{% endif %}
+                        >
+                        <span class="theme-option-name">Atrevido</span>
+                        <div class="theme-preview theme-preview-bold">
+                            Elige tu cita
+                            <div class="theme-preview-btn">Ver horas disponibles</div>
+                        </div>
+                    </label>
+
+                    <label class="theme-option">
+                        <input
+                            type="radio"
+                            name="theme"
+                            value="nature"
+                            {% if business.theme == "nature" %}checked{% endif %}
+                        >
+                        <span class="theme-option-name">Natural</span>
+                        <div class="theme-preview theme-preview-nature">
+                            Elige tu cita
+                            <div class="theme-preview-btn">Ver horas disponibles</div>
+                        </div>
+                    </label>
+
+                    <label class="theme-option">
+                        <input
+                            type="radio"
+                            name="theme"
+                            value="elegant"
+                            {% if business.theme == "elegant" %}checked{% endif %}
+                        >
+                        <span class="theme-option-name">Elegante</span>
+                        <div class="theme-preview theme-preview-elegant">
+                            Elige tu cita
+                            <div class="theme-preview-btn">Ver horas disponibles</div>
+                        </div>
+                    </label>
                 </div>
 
                 <div class="help-box">
@@ -332,7 +416,7 @@
                 <div class="help-box">
                     Ejemplo: si pones 2 horas y 31 días, el cliente no podrá reservar con menos de 2 horas ni más de 31 días vista.
                 </div>
-                
+
                 <label for="slot_interval_minutes">Intervalo entre horas de reserva</label>
                 <select
                     id="slot_interval_minutes"
@@ -349,7 +433,6 @@
                 <div class="help-box">
                     Cada cuántos minutos se ofrecen horas a los clientes (ej: cada 15 min → 10:00, 10:15, 10:30...). Un intervalo pequeño aprovecha mejor la agenda con servicios de duración no redonda, pero muestra más opciones para elegir.
                 </div>
-
 
                 <button type="submit" class="btn">Guardar cambios</button>
                 <a href="/dashboard/" class="btn btn-secondary">Volver</a>

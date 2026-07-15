@@ -4,10 +4,13 @@ from django.db import models
 
 class Business(models.Model):
     THEME_CHOICES = [
-        ("classic", "Clásico"),
-        ("modern", "Moderno"),
-        ("beauty", "Belleza"),
-    ]
+            ("classic", "Clásico"),
+            ("modern", "Moderno"),
+            ("beauty", "Belleza"),
+            ("bold", "Atrevido"),
+            ("nature", "Natural"),
+            ("elegant", "Elegante"),
+        ]
 
     SLOT_INTERVAL_CHOICES = [
         (5, "5 minutos"),

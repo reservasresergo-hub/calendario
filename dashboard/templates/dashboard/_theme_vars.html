@@ -1,0 +1,44 @@
+<style>
+    :root {
+        --accent: {% if business.theme == "beauty" %}#b55c7a{% elif business.theme == "bold" %}#e8543e{% elif business.theme == "nature" %}#4a7c59{% elif business.theme == "elegant" %}#b8912f{% elif business.theme == "modern" %}#111111{% else %}#000000{% endif %};
+        --accent-text: #ffffff;
+        --radius-sm: {% if business.theme == "beauty" %}14px{% elif business.theme == "bold" %}10px{% elif business.theme == "nature" %}16px{% elif business.theme == "elegant" %}8px{% elif business.theme == "modern" %}12px{% else %}9px{% endif %};
+        --radius-lg: {% if business.theme == "beauty" %}24px{% elif business.theme == "bold" %}16px{% elif business.theme == "nature" %}26px{% elif business.theme == "elegant" %}12px{% elif business.theme == "modern" %}20px{% else %}14px{% endif %};
+        --font-main: {% if business.theme == "beauty" %}Georgia, "Times New Roman", serif{% elif business.theme == "elegant" %}Georgia, "Times New Roman", serif{% else %}Arial, sans-serif{% endif %};
+        --heading-color: {% if business.theme == "beauty" %}#7a3e53{% elif business.theme == "bold" %}#b8371f{% elif business.theme == "nature" %}#2f5233{% elif business.theme == "elegant" %}#1a2238{% else %}#222222{% endif %};
+        --page-bg: {% if business.theme == "beauty" %}linear-gradient(180deg, #fff8fb 0%, #fdf2f8 100%){% elif business.theme == "bold" %}linear-gradient(180deg, #fff9f7 0%, #fdf0ed 100%){% elif business.theme == "nature" %}linear-gradient(180deg, #f4faf6 0%, #eaf5ee 100%){% elif business.theme == "elegant" %}linear-gradient(180deg, #faf8f3 0%, #f5f1e6 100%){% elif business.theme == "modern" %}linear-gradient(180deg, #f8f8f8 0%, #efefef 100%){% else %}#f5f5f5{% endif %};
+        --card-border: {% if business.theme == "beauty" %}#f5d6df{% elif business.theme == "bold" %}#fbdbd3{% elif business.theme == "nature" %}#d3e8da{% elif business.theme == "elegant" %}#e8dfc4{% else %}transparent{% endif %};
+    }
+
+    body {
+        font-family: var(--font-main);
+        background: var(--page-bg);
+    }
+
+    h1, h2, h3 {
+        color: var(--heading-color);
+    }
+
+    .card {
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--card-border);
+    }
+
+    .btn {
+        background: var(--accent);
+        color: var(--accent-text);
+        border-radius: var(--radius-sm);
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    input[type="date"],
+    input[type="time"],
+    input[type="password"],
+    input[type="file"],
+    select {
+        border-radius: var(--radius-sm);
+        font-family: var(--font-main);
+    }
+</style>

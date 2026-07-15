@@ -516,27 +516,619 @@
             font-family: Arial, sans-serif;
         }
 
+        /* ===================== TEMA: ATREVIDO ===================== */
+
+        body.theme-bold {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(180deg, #fff9f7 0%, #fdf0ed 100%);
+            color: #2b2320;
+        }
+
+        body.theme-bold .page {
+            min-height: 100vh;
+            padding: 32px 16px;
+        }
+
+        body.theme-bold .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        body.theme-bold .hero {
+            background: rgba(255,255,255,0.95);
+            border-radius: 18px;
+            padding: 32px;
+            box-shadow: 0 10px 30px rgba(232, 84, 62, 0.10);
+            margin-bottom: 24px;
+            border: 1px solid #fbdbd3;
+            text-align: center;
+        }
+
+        body.theme-bold .badge {
+            display: inline-block;
+            background: #fde4de;
+            color: #b8371f;
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            font-weight: bold;
+        }
+
+        body.theme-bold h1 {
+            margin: 0 0 12px;
+            font-size: 34px;
+            line-height: 1.1;
+            color: #b8371f;
+        }
+
+        body.theme-bold .subtitle {
+            margin: 0;
+            color: #6b5a53;
+            font-size: 16px;
+        }
+
+        body.theme-bold .card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 18px;
+            padding: 28px;
+            box-shadow: 0 10px 30px rgba(232, 84, 62, 0.10);
+            margin-bottom: 24px;
+            border: 1px solid #fbdbd3;
+        }
+
+        body.theme-bold h2, body.theme-bold h3 {
+            margin-top: 0;
+            color: #b8371f;
+        }
+
+        body.theme-bold label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        body.theme-bold .field {
+            margin-bottom: 18px;
+        }
+
+        body.theme-bold select,
+        body.theme-bold input[type="date"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #f3c6ba;
+            border-radius: 10px;
+            font-size: 16px;
+            background: #fff;
+        }
+
+        body.theme-bold select:focus,
+        body.theme-bold input[type="date"]:focus {
+            outline: none;
+            border-color: #e8543e;
+            box-shadow: 0 0 0 3px rgba(232, 84, 62, 0.14);
+        }
+
+        body.theme-bold .main-button,
+        body.theme-bold .slot-button {
+            border: none;
+            border-radius: 10px;
+            background: #e8543e;
+            color: white;
+            padding: 14px 18px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.12s ease, opacity 0.12s ease;
+        }
+
+        body.theme-bold .main-button:hover,
+        body.theme-bold .slot-button:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+
+        body.theme-bold .main-button {
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        body.theme-bold .empty {
+            color: #8a7168;
+            font-style: italic;
+            margin: 0;
+        }
+
+        body.theme-bold .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        body.theme-bold .slot-form {
+            margin: 0;
+        }
+
+        body.theme-bold .slot-card {
+            border: 1px solid #fbdbd3;
+            border-radius: 14px;
+            padding: 18px;
+            background: #fffaf8;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        body.theme-bold .slot-time {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #b8371f;
+        }
+
+        body.theme-bold .slot-employee {
+            color: #6b5a53;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        body.theme-bold .info-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        body.theme-bold .info-pill {
+            background: #fde4de;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            color: #b8371f;
+            font-weight: bold;
+        }
+
+        body.theme-bold .error-box {
+            background: #fff4f4;
+            color: #9b1c1c;
+            border: 1px solid #f0caca;
+            padding: 14px 16px;
+            border-radius: 10px;
+            margin-bottom: 18px;
+        }
+
+        body.theme-bold .help-text {
+            font-size: 14px;
+            color: #6b5a53;
+            margin-top: 8px;
+        }
+
+        /* ===================== TEMA: NATURAL ===================== */
+
+        body.theme-nature {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(180deg, #f4faf6 0%, #eaf5ee 100%);
+            color: #2f3f35;
+        }
+
+        body.theme-nature .page {
+            min-height: 100vh;
+            padding: 32px 16px;
+        }
+
+        body.theme-nature .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        body.theme-nature .hero {
+            background: rgba(255,255,255,0.92);
+            border-radius: 28px;
+            padding: 34px;
+            box-shadow: 0 10px 30px rgba(74, 124, 89, 0.10);
+            margin-bottom: 24px;
+            border: 1px solid #d3e8da;
+            text-align: center;
+        }
+
+        body.theme-nature .badge {
+            display: inline-block;
+            background: #e3f0e6;
+            color: #2f5233;
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        body.theme-nature h1 {
+            margin: 0 0 12px;
+            font-size: 34px;
+            line-height: 1.1;
+            color: #2f5233;
+        }
+
+        body.theme-nature .subtitle {
+            margin: 0;
+            color: #5c6f63;
+            font-size: 16px;
+        }
+
+        body.theme-nature .card {
+            background: rgba(255,255,255,0.92);
+            border-radius: 26px;
+            padding: 28px;
+            box-shadow: 0 10px 30px rgba(74, 124, 89, 0.10);
+            margin-bottom: 24px;
+            border: 1px solid #d3e8da;
+        }
+
+        body.theme-nature h2, body.theme-nature h3 {
+            margin-top: 0;
+            color: #2f5233;
+        }
+
+        body.theme-nature label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        body.theme-nature .field {
+            margin-bottom: 18px;
+        }
+
+        body.theme-nature select,
+        body.theme-nature input[type="date"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #cfe6d7;
+            border-radius: 16px;
+            font-size: 16px;
+            background: #fff;
+        }
+
+        body.theme-nature select:focus,
+        body.theme-nature input[type="date"]:focus {
+            outline: none;
+            border-color: #4a7c59;
+            box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.14);
+        }
+
+        body.theme-nature .main-button,
+        body.theme-nature .slot-button {
+            border: none;
+            border-radius: 16px;
+            background: #4a7c59;
+            color: white;
+            padding: 14px 18px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: transform 0.12s ease, opacity 0.12s ease;
+        }
+
+        body.theme-nature .main-button:hover,
+        body.theme-nature .slot-button:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+
+        body.theme-nature .main-button {
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        body.theme-nature .empty {
+            color: #6f8177;
+            font-style: italic;
+            margin: 0;
+        }
+
+        body.theme-nature .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        body.theme-nature .slot-form {
+            margin: 0;
+        }
+
+        body.theme-nature .slot-card {
+            border: 1px solid #d3e8da;
+            border-radius: 20px;
+            padding: 18px;
+            background: #f8fbf9;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        body.theme-nature .slot-time {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2f5233;
+        }
+
+        body.theme-nature .slot-employee {
+            color: #5c6f63;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        body.theme-nature .info-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        body.theme-nature .info-pill {
+            background: #e3f0e6;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            color: #2f5233;
+        }
+
+        body.theme-nature .error-box {
+            background: #fff4f4;
+            color: #9b1c1c;
+            border: 1px solid #f0caca;
+            padding: 14px 16px;
+            border-radius: 16px;
+            margin-bottom: 18px;
+        }
+
+        body.theme-nature .help-text {
+            font-size: 14px;
+            color: #5c6f63;
+            margin-top: 8px;
+        }
+
+        /* ===================== TEMA: ELEGANTE ===================== */
+
+        body.theme-elegant {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            background: linear-gradient(180deg, #faf8f3 0%, #f5f1e6 100%);
+            color: #1a2238;
+        }
+
+        body.theme-elegant .page {
+            min-height: 100vh;
+            padding: 32px 16px;
+        }
+
+        body.theme-elegant .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        body.theme-elegant .hero {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 34px;
+            box-shadow: 0 10px 30px rgba(26, 34, 56, 0.10);
+            margin-bottom: 24px;
+            border: 1px solid #e8dfc4;
+            text-align: center;
+        }
+
+        body.theme-elegant .badge {
+            display: inline-block;
+            background: #f0e8cf;
+            color: #8a6d1f;
+            border-radius: 4px;
+            padding: 8px 14px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            font-family: Arial, sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        body.theme-elegant h1 {
+            margin: 0 0 12px;
+            font-size: 36px;
+            line-height: 1.1;
+            color: #1a2238;
+        }
+
+        body.theme-elegant .subtitle {
+            margin: 0;
+            color: #4c5673;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-elegant .card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 10px 30px rgba(26, 34, 56, 0.10);
+            margin-bottom: 24px;
+            border: 1px solid #e8dfc4;
+        }
+
+        body.theme-elegant h2, body.theme-elegant h3 {
+            margin-top: 0;
+            color: #1a2238;
+        }
+
+        body.theme-elegant label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 15px;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-elegant .field {
+            margin-bottom: 18px;
+        }
+
+        body.theme-elegant select,
+        body.theme-elegant input[type="date"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #e0d6b3;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #fff;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-elegant select:focus,
+        body.theme-elegant input[type="date"]:focus {
+            outline: none;
+            border-color: #b8912f;
+            box-shadow: 0 0 0 3px rgba(184, 145, 47, 0.14);
+        }
+
+        body.theme-elegant .main-button,
+        body.theme-elegant .slot-button {
+            border: none;
+            border-radius: 8px;
+            background: #1a2238;
+            color: #f0e8cf;
+            padding: 14px 18px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: transform 0.12s ease, opacity 0.12s ease;
+            font-family: Arial, sans-serif;
+            letter-spacing: 0.3px;
+        }
+
+        body.theme-elegant .main-button:hover,
+        body.theme-elegant .slot-button:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+
+        body.theme-elegant .main-button {
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        body.theme-elegant .empty {
+            color: #6a7290;
+            font-style: italic;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-elegant .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        body.theme-elegant .slot-form {
+            margin: 0;
+        }
+
+        body.theme-elegant .slot-card {
+            border: 1px solid #e8dfc4;
+            border-radius: 10px;
+            padding: 18px;
+            background: #fffdf7;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        body.theme-elegant .slot-time {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #1a2238;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-elegant .slot-employee {
+            color: #4c5673;
+            margin-bottom: 16px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-elegant .info-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        body.theme-elegant .info-pill {
+            background: #f0e8cf;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #8a6d1f;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-elegant .error-box {
+            background: #fff4f4;
+            color: #9b1c1c;
+            border: 1px solid #f0caca;
+            padding: 14px 16px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            font-family: Arial, sans-serif;
+        }
+
+        body.theme-elegant .help-text {
+            font-size: 14px;
+            color: #4c5673;
+            margin-top: 8px;
+            font-family: Arial, sans-serif;
+        }
+
         @media (max-width: 640px) {
             body.theme-modern .hero,
             body.theme-modern .card,
             body.theme-beauty .hero,
-            body.theme-beauty .card {
+            body.theme-beauty .card,
+            body.theme-bold .hero,
+            body.theme-bold .card,
+            body.theme-nature .hero,
+            body.theme-nature .card,
+            body.theme-elegant .hero,
+            body.theme-elegant .card {
                 padding: 22px;
                 border-radius: 18px;
             }
 
             body.theme-modern h1,
-            body.theme-beauty h1 {
+            body.theme-beauty h1,
+            body.theme-bold h1,
+            body.theme-nature h1,
+            body.theme-elegant h1 {
                 font-size: 28px;
             }
 
             body.theme-modern .page,
-            body.theme-beauty .page {
+            body.theme-beauty .page,
+            body.theme-bold .page,
+            body.theme-nature .page,
+            body.theme-elegant .page {
                 padding: 18px 12px;
             }
 
             body.theme-modern .slot-time,
-            body.theme-beauty .slot-time {
+            body.theme-beauty .slot-time,
+            body.theme-bold .slot-time,
+            body.theme-nature .slot-time,
+            body.theme-elegant .slot-time {
                 font-size: 22px;
             }
 
