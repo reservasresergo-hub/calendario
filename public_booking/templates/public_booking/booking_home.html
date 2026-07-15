@@ -11,14 +11,19 @@
         }
 
         /* Arreglo para un bug conocido de Safari/iOS: el campo de fecha
-           (input type="date") a veces ignora el "width: 100%" de CSS y
-           usa su propio ancho interno, saliéndose del contenedor en
-           móvil. Esto fuerza a que respete siempre el ancho real. */
+           (input type="date") usa por defecto "display: inline-flex" y,
+           por eso, Safari ignora el "width: 100%" de CSS, saliéndose del
+           contenedor en móvil. Forzamos "display: flex" (que sí respeta
+           el ancho) y min-width: 0 para que nunca imponga su propio
+           ancho interno mínimo. */
         input[type="date"] {
             width: 100%;
             max-width: 100%;
-            -webkit-min-logical-width: 0%;
             min-width: 0;
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            appearance: none;
+            display: flex;
         }
 
         html, body {
