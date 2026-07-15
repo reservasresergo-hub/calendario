@@ -200,6 +200,24 @@
                 <div class="help-box">
                     Ejemplo: si pones 2 horas y 31 días, el cliente no podrá reservar con menos de 2 horas ni más de 31 días vista.
                 </div>
+                
+                <label for="slot_interval_minutes">Intervalo entre horas de reserva</label>
+                <select
+                    id="slot_interval_minutes"
+                    name="slot_interval_minutes"
+                    required
+                >
+                    {% for value, label in business.SLOT_INTERVAL_CHOICES %}
+                        <option value="{{ value }}" {% if business.slot_interval_minutes == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <div class="help-box">
+                    Cada cuántos minutos se ofrecen horas a los clientes (ej: cada 15 min → 10:00, 10:15, 10:30...). Un intervalo pequeño aprovecha mejor la agenda con servicios de duración no redonda, pero muestra más opciones para elegir.
+                </div>
+
 
                 <button type="submit" class="btn">Guardar cambios</button>
                 <a href="/dashboard/" class="btn btn-secondary">Volver</a>

@@ -1,20 +1,28 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
+from django.db import transaction, IntegrityError, OperationalError
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 
-from bookings.utils import get_available_slots
+from bookings.utils import get_available_slots, has_conflict, lock_employee_day_bookings
 from bookings.models import Booking
 from bookings.emails import send_booking_emails
 from customers.models import Customer
-from employees.models import Employee
+from employees.models import Employee, EmployeeService
 from services_app.models import Service
 from businesses.models import Business
 
 
 def check_api_key(request):
+    # Si no se ha configurado una API_SECRET_KEY propia por variable de
+    # entorno, esta API queda desactivada por seguridad: la clave por
+    # defecto del código quedó expuesta en documentos antiguos del
+    # proyecto y no debe usarse en producción.
+    if not settings.API_SECRET_KEY or settings.API_SECRET_KEY == "mi_clave_super_secreta_123":
+        return False
+
     api_key = request.headers.get("X-API-KEY")
     return api_key == settings.API_SECRET_KEY
 
@@ -75,42 +83,75 @@ def create_booking_view(request):
         customer_phone = data["customer_phone"]
         customer_email = data.get("customer_email", "")
 
+        if not customer_name or not customer_phone:
+            return JsonResponse(
+                {"error": "Faltan customer_name o customer_phone"},
+                status=400
+            )
+
         business = Business.objects.get(slug=business_slug)
-        service = Service.objects.get(id=service_id, business=business)
-        employee = Employee.objects.get(id=employee_id, business=business)
+        service = Service.objects.get(id=service_id, business=business, active=True)
 
-        # Crear o recuperar cliente
-        customer, created = Customer.objects.get_or_create(
+        # El empleado debe pertenecer a este negocio Y ofrecer este servicio.
+        employee = Employee.objects.get(
+            id=employee_id,
             business=business,
-            phone=customer_phone,
-            defaults={
-                "full_name": customer_name,
-                "email": customer_email,
-            }
+            active=True,
+            employee_services__service=service,
         )
-
-        # Si el cliente ya existía, actualizamos sus datos
-        if not created:
-            customer.full_name = customer_name
-            customer.email = customer_email
-            customer.save()
-
-        # Calcular end_time automáticamente
-        from datetime import timedelta
 
         start_dt = datetime.combine(booking_date, start_time)
         end_dt = start_dt + timedelta(minutes=service.duration_minutes)
 
-        booking = Booking.objects.create(
-            business=business,
-            customer=customer,
-            employee=employee,
-            service=service,
-            booking_date=booking_date,
-            start_time=start_time,
-            end_time=end_dt.time(),
-            status="confirmed",
-        )
+        # Igual que en la web pública: bloqueo + comprobación de conflicto
+        # + creación, todo en una única transacción, con la restricción
+        # única de la base de datos como red de seguridad final.
+        try:
+            with transaction.atomic():
+                lock_employee_day_bookings(
+                    business_id=business.id,
+                    employee_id=employee.id,
+                    date=booking_date,
+                )
+
+                if has_conflict(
+                    business_id=business.id,
+                    employee_id=employee.id,
+                    date=booking_date,
+                    start_time=start_time,
+                    end_time=end_dt.time(),
+                ):
+                    raise IntegrityError("conflict")
+
+                customer, created = Customer.objects.get_or_create(
+                    business=business,
+                    phone=customer_phone,
+                    defaults={
+                        "full_name": customer_name,
+                        "email": customer_email,
+                    }
+                )
+
+                if not created:
+                    customer.full_name = customer_name
+                    customer.email = customer_email
+                    customer.save()
+
+                booking = Booking.objects.create(
+                    business=business,
+                    customer=customer,
+                    employee=employee,
+                    service=service,
+                    booking_date=booking_date,
+                    start_time=start_time,
+                    end_time=end_dt.time(),
+                    status="confirmed",
+                )
+        except (IntegrityError, OperationalError):
+            return JsonResponse(
+                {"error": "Ese hueco ya está ocupado. Elige otra hora."},
+                status=409
+            )
 
         # Enviar emails automáticos
         send_booking_emails(booking)

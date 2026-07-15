@@ -119,7 +119,14 @@ def login_user(request):
     y mostrar mensajes claros si el usuario o contraseña son incorrectos.
     """
 
-    if request.user.is_authenticated:
+    # Si la sesión activa es la del usuario demo, la cerramos primero.
+    # Si no, alguien que probó la demo y luego pulsa "Iniciar sesión" o
+    # "Ya soy cliente" se quedaría siempre atrapado en el panel de demo,
+    # sin poder llegar nunca al formulario para entrar con su cuenta real.
+    if request.user.is_authenticated and request.user.username == "demo@resergo.es":
+        logout(request)
+
+    elif request.user.is_authenticated:
         return redirect("dashboard-home")
 
     if request.method == "POST":
@@ -287,29 +294,3 @@ def custom_csrf_failure(request, reason=""):
         return redirect("register_business")
 
     return redirect("login")
-def aviso_legal(request):
-    return render(
-        request,
-        "accounts/aviso_legal.html"
-    )
-
-
-def politica_privacidad(request):
-    return render(
-        request,
-        "accounts/politica_privacidad.html"
-    )
-
-
-def politica_cookies(request):
-    return render(
-        request,
-        "accounts/politica_cookies.html"
-    )
-
-
-def condiciones_uso(request):
-    return render(
-        request,
-        "accounts/condiciones_uso.html"
-    )

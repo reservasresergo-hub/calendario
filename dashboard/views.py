@@ -3,12 +3,13 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db import transaction, IntegrityError
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
 from businesses.models import Business
 from bookings.models import Booking
-from bookings.utils import get_available_slots, has_conflict
+from bookings.utils import get_available_slots, has_conflict, lock_employee_day_bookings
 from customers.models import Customer
 from employees.models import Employee, EmployeeService
 from services_app.models import Service
@@ -378,44 +379,60 @@ def create_booking(request):
             start_dt = datetime.combine(booking_date_obj, start_time_obj)
             end_dt = start_dt + timedelta(minutes=service.duration_minutes)
 
-            conflict_exists = has_conflict(
-                business_id=business.id,
-                employee_id=employee.id,
-                date=booking_date_obj,
-                start_time=start_time_obj,
-                end_time=end_dt.time(),
-            )
+            booking_created = False
 
-            if conflict_exists:
+            try:
+                with transaction.atomic():
+                    lock_employee_day_bookings(
+                        business_id=business.id,
+                        employee_id=employee.id,
+                        date=booking_date_obj,
+                    )
+
+                    conflict_exists = has_conflict(
+                        business_id=business.id,
+                        employee_id=employee.id,
+                        date=booking_date_obj,
+                        start_time=start_time_obj,
+                        end_time=end_dt.time(),
+                    )
+
+                    if conflict_exists:
+                        raise IntegrityError("conflict")
+
+                    customer, created = Customer.objects.get_or_create(
+                        business=business,
+                        phone=customer_phone,
+                        defaults={
+                            "full_name": customer_name,
+                            "email": customer_email,
+                        }
+                    )
+
+                    if not created:
+                        customer.full_name = customer_name
+                        customer.email = customer_email
+                        customer.save()
+
+                    Booking.objects.create(
+                        business=business,
+                        customer=customer,
+                        employee=employee,
+                        service=service,
+                        booking_date=booking_date_obj,
+                        start_time=start_time_obj,
+                        source="dashboard"
+                    )
+
+                    booking_created = True
+
+            except IntegrityError:
                 error_message = (
                     "Ese hueco ya está ocupado o bloqueado. "
                     "Elige otra hora."
                 )
-            else:
-                customer, created = Customer.objects.get_or_create(
-                    business=business,
-                    phone=customer_phone,
-                    defaults={
-                        "full_name": customer_name,
-                        "email": customer_email,
-                    }
-                )
 
-                if not created:
-                    customer.full_name = customer_name
-                    customer.email = customer_email
-                    customer.save()
-
-                Booking.objects.create(
-                    business=business,
-                    customer=customer,
-                    employee=employee,
-                    service=service,
-                    booking_date=booking_date_obj,
-                    start_time=start_time_obj,
-                    source="dashboard"
-                )
-
+            if booking_created:
                 messages.success(request, "Reserva creada correctamente.")
                 return redirect("dashboard-home")
 
@@ -575,8 +592,6 @@ def delete_blocked_slot(request, block_id):
     block.delete()
     messages.success(request, "Horario desbloqueado correctamente.")
     return redirect("dashboard-home")
-
-
 @login_required
 def edit_booking(request, booking_id):
     business = get_current_business(request)
@@ -629,24 +644,39 @@ def edit_booking(request, booking_id):
             start_dt = datetime.combine(date_obj, time_obj)
             end_dt = start_dt + timedelta(minutes=service.duration_minutes)
 
-            conflict = has_conflict(
-                business_id=business.id,
-                employee_id=employee.id,
-                date=date_obj,
-                start_time=time_obj,
-                end_time=end_dt.time(),
-                exclude_booking_id=booking.id,
-            )
+            saved = False
 
-            if conflict:
+            try:
+                with transaction.atomic():
+                    lock_employee_day_bookings(
+                        business_id=business.id,
+                        employee_id=employee.id,
+                        date=date_obj,
+                    )
+
+                    conflict = has_conflict(
+                        business_id=business.id,
+                        employee_id=employee.id,
+                        date=date_obj,
+                        start_time=time_obj,
+                        end_time=end_dt.time(),
+                        exclude_booking_id=booking.id,
+                    )
+
+                    if conflict:
+                        raise IntegrityError("conflict")
+
+                    booking.service = service
+                    booking.employee = employee
+                    booking.booking_date = date_obj
+                    booking.start_time = time_obj
+                    booking.save()
+                    saved = True
+
+            except IntegrityError:
                 error_message = "Ese horario no está disponible."
-            else:
-                booking.service = service
-                booking.employee = employee
-                booking.booking_date = date_obj
-                booking.start_time = time_obj
-                booking.save()
 
+            if saved:
                 messages.success(request, "Reserva editada correctamente.")
                 return redirect("dashboard-home")
 
@@ -1151,6 +1181,12 @@ def edit_business(request):
         business.max_advance_days = int(
             request.POST.get("max_advance_days") or 31
         )
+        allowed_intervals = [choice[0] for choice in business.SLOT_INTERVAL_CHOICES]
+        slot_interval = int(
+            request.POST.get("slot_interval_minutes") or business.slot_interval_minutes
+        )
+        if slot_interval in allowed_intervals:
+            business.slot_interval_minutes = slot_interval
 
         business.save()
 

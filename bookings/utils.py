@@ -1,9 +1,29 @@
 from datetime import datetime, timedelta
 
 from bookings.models import Booking
+from businesses.models import Business
 from employees.models import EmployeeService
 from schedules.models import WeeklySchedule, BlockedSlot
 from services_app.models import Service
+
+
+def lock_employee_day_bookings(business_id, employee_id, date):
+    """
+    Bloquea (SELECT ... FOR UPDATE) las reservas confirmadas de un empleado
+    en un día concreto. Se usa dentro de una transacción justo antes de
+    comprobar conflictos y crear una reserva, para que dos peticiones
+    simultáneas para el mismo hueco no puedan colarse las dos a la vez.
+
+    Debe llamarse siempre dentro de un transaction.atomic().
+    """
+    return list(
+        Booking.objects.select_for_update().filter(
+            business_id=business_id,
+            employee_id=employee_id,
+            booking_date=date,
+            status="confirmed",
+        )
+    )
 
 
 def overlaps(start1, end1, start2, end2):
@@ -71,6 +91,15 @@ def get_available_slots(
         active=True
     )
 
+    # Cada cuántos minutos se prueba un posible hueco de inicio.
+    # Cada negocio elige el suyo en su configuración (por defecto 15 min).
+    # Un intervalo fijo a 30 minutos dejaba huecos muertos sin usar cuando
+    # un servicio duraba, por ejemplo, 45 minutos (10:00-10:45, y el
+    # siguiente hueco válido, 10:45, nunca se llegaba a ofrecer). Con un
+    # paso más fino, los huecos se ajustan justo después de que termine
+    # cualquier cita anterior, sea cual sea su duración.
+    slot_step_minutes = Business.objects.get(id=business_id).slot_interval_minutes
+
     duration = timedelta(minutes=service.duration_minutes)
 
     employee_services = EmployeeService.objects.filter(
@@ -127,7 +156,7 @@ def get_available_slots(
                             "start_time": current.strftime("%H:%M"),
                         })
 
-                    current += timedelta(minutes=30)
+                    current += timedelta(minutes=slot_step_minutes)
 
     available_slots.sort(key=lambda x: (x["start_time"], x["employee_name"]))
     return available_slots

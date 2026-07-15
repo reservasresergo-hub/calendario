@@ -2,13 +2,14 @@ from datetime import datetime, timedelta
 import json
 import logging
 
+from django.db import transaction, IntegrityError, OperationalError
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 
 from businesses.models import Business
 from services_app.models import Service
 from employees.models import Employee, EmployeeService
-from bookings.utils import get_available_slots, has_conflict
+from bookings.utils import get_available_slots, has_conflict, lock_employee_day_bookings
 from customers.models import Customer
 from bookings.models import Booking
 from bookings.emails import send_booking_emails
@@ -86,9 +87,18 @@ def booking_home(request, business_slug):
         # =========================================================
 
         if "confirm_booking" in request.POST and not error_message:
-            customer_name = request.POST.get("customer_name")
-            customer_phone = request.POST.get("customer_phone")
-            customer_email = request.POST.get("customer_email")
+            customer_name = (request.POST.get("customer_name") or "").strip()
+            customer_phone = (request.POST.get("customer_phone") or "").strip()
+            customer_email = (request.POST.get("customer_email") or "").strip()
+
+            # =====================================================
+            # VALIDAR DATOS DEL CLIENTE (por si se salta el formulario)
+            # =====================================================
+
+            if not customer_name:
+                error_message = "Falta el nombre del cliente."
+            elif not customer_phone:
+                error_message = "Falta el teléfono del cliente."
 
             booking_date_obj = datetime.strptime(
                 selected_date,
@@ -107,6 +117,27 @@ def booking_home(request, business_slug):
                 active=True
             )
 
+            # =====================================================
+            # VALIDAR QUE EL EMPLEADO ES REAL, DE ESTE NEGOCIO Y
+            # OFRECE ESTE SERVICIO (el employee_id llega en un campo
+            # oculto del formulario, así que no nos podemos fiar de él
+            # sin comprobarlo en el servidor)
+            # =====================================================
+
+            employee = None
+
+            if not error_message:
+                try:
+                    employee = get_object_or_404(
+                        Employee,
+                        id=int(employee_id),
+                        business=business,
+                        active=True,
+                        employee_services__service=service,
+                    )
+                except (TypeError, ValueError):
+                    error_message = "Profesional no válido."
+
             start_dt = datetime.combine(
                 booking_date_obj,
                 start_time_obj
@@ -122,66 +153,99 @@ def booking_home(request, business_slug):
 
             now = datetime.now()
 
-            if start_dt < now + timedelta(hours=business.min_advance_hours):
+            if not error_message and start_dt < now + timedelta(hours=business.min_advance_hours):
                 error_message = (
                     f"Las reservas deben hacerse con al menos "
                     f"{business.min_advance_hours} horas de antelación."
                 )
 
             # =====================================================
-            # CONFLICTOS
+            # CONFLICTOS + CREAR RESERVA
             # =====================================================
+            # Todo esto ocurre dentro de una única transacción con
+            # bloqueo de filas (select_for_update). Así, si dos
+            # clientes confirman el mismo hueco casi a la vez, la
+            # segunda petición espera a que termine la primera y
+            # vuelve a comprobar el conflicto ya con el hueco ocupado.
+            # La restricción única de la base de datos actúa además
+            # como red de seguridad final.
+            # =====================================================
+
+            booking = None
 
             if not error_message:
-                conflict_exists = has_conflict(
-                    business_id=business.id,
-                    employee_id=int(employee_id),
-                    date=booking_date_obj,
-                    start_time=start_time_obj,
-                    end_time=end_dt.time(),
-                )
+                try:
+                    with transaction.atomic():
+                        lock_employee_day_bookings(
+                            business_id=business.id,
+                            employee_id=employee.id,
+                            date=booking_date_obj,
+                        )
 
-                if conflict_exists:
-                    return render(
-                        request,
-                        "public_booking/booking_conflict.html",
-                        {
-                            "business": business,
-                            "booking_date": selected_date,
-                            "start_time": selected_time,
-                            "service_id": selected_service_id,
-                        }
-                    )
+                        conflict_exists = has_conflict(
+                            business_id=business.id,
+                            employee_id=employee.id,
+                            date=booking_date_obj,
+                            start_time=start_time_obj,
+                            end_time=end_dt.time(),
+                        )
 
-            # =====================================================
-            # CREAR RESERVA
-            # =====================================================
+                        if conflict_exists:
+                            raise IntegrityError("conflict")
 
-            if not error_message:
-                customer, created = Customer.objects.get_or_create(
-                    business=business,
-                    phone=customer_phone,
-                    defaults={
-                        "full_name": customer_name,
-                        "email": customer_email,
+                        customer, created = Customer.objects.get_or_create(
+                            business=business,
+                            phone=customer_phone,
+                            defaults={
+                                "full_name": customer_name,
+                                "email": customer_email,
+                            }
+                        )
+
+                        if not created:
+                            customer.full_name = customer_name
+                            customer.email = customer_email
+                            customer.save()
+
+                        booking = Booking.objects.create(
+                            business=business,
+                            customer=customer,
+                            employee=employee,
+                            service=service,
+                            booking_date=booking_date_obj,
+                            start_time=start_time_obj,
+                            source="web"
+                        )
+
+                except (IntegrityError, OperationalError):
+                    # Conflicto real (restricción única) o la base de datos
+                    # estaba momentáneamente bloqueada por otra reserva
+                    # simultánea. En ambos casos, tratamos el hueco como
+                    # no disponible en vez de mostrar un error al cliente.
+                    booking = None
+
+            if not error_message and booking is None:
+                return render(
+                    request,
+                    "public_booking/booking_conflict.html",
+                    {
+                        "business": business,
+                        "booking_date": selected_date,
+                        "start_time": selected_time,
+                        "service_id": selected_service_id,
                     }
                 )
 
-                if not created:
-                    customer.full_name = customer_name
-                    customer.email = customer_email
-                    customer.save()
+            # =====================================================
+            # RESERVA CREADA: ENVIAR EMAIL SIN ROMPER LA RESERVA
+            # =====================================================
+            # Importante:
+            # La reserva ya está creada.
+            # Si Brevo/SMTP falla o tarda, NO debe aparecer error 500.
+            # El fallo queda registrado en Render Logs.
+            # =====================================================
 
-                booking = Booking.objects.create(
-                    business=business,
-                    customer=customer,
-                    employee_id=int(employee_id),
-                    service=service,
-                    booking_date=booking_date_obj,
-                    start_time=start_time_obj,
-                    source="web"
-                )
-
+            if not error_message and booking is not None:
                 cancel_url = request.build_absolute_uri(
                     reverse(
                         "cancel-booking-public",
@@ -191,15 +255,6 @@ def booking_home(request, business_slug):
                         }
                     )
                 )
-
-                # =====================================================
-                # ENVIAR EMAIL SIN ROMPER LA RESERVA
-                # =====================================================
-                # Importante:
-                # La reserva ya está creada.
-                # Si Brevo/SMTP falla o tarda, NO debe aparecer error 500.
-                # El fallo queda registrado en Render Logs.
-                # =====================================================
 
                 try:
                     email_sent = send_booking_emails(

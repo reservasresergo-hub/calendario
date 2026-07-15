@@ -9,6 +9,15 @@ class Business(models.Model):
         ("beauty", "Belleza"),
     ]
 
+    SLOT_INTERVAL_CHOICES = [
+        (5, "5 minutos"),
+        (10, "10 minutos"),
+        (15, "15 minutos"),
+        (20, "20 minutos"),
+        (30, "30 minutos"),
+        (60, "60 minutos"),
+    ]
+
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -68,6 +77,18 @@ class Business(models.Model):
     max_advance_days = models.PositiveIntegerField(
         default=31,
         verbose_name="Días máximos de antelación"
+    )
+
+    slot_interval_minutes = models.PositiveIntegerField(
+        choices=SLOT_INTERVAL_CHOICES,
+        default=15,
+        verbose_name="Intervalo entre horas de reserva",
+        help_text=(
+            "Cada cuántos minutos se ofrecen horas de inicio a los clientes "
+            "(por ejemplo, cada 15 minutos: 10:00, 10:15, 10:30...). "
+            "Un intervalo más pequeño aprovecha mejor la agenda con servicios "
+            "de duración poco redonda, pero muestra más opciones."
+        )
     )
 
     created_at = models.DateTimeField(

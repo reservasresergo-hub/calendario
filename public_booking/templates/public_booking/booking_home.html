@@ -10,6 +10,22 @@
             box-sizing: border-box;
         }
 
+        /* Arreglo para un bug conocido de Safari/iOS: el campo de fecha
+           (input type="date") a veces ignora el "width: 100%" de CSS y
+           usa su propio ancho interno, saliéndose del contenedor en
+           móvil. Esto fuerza a que respete siempre el ancho real. */
+        input[type="date"] {
+            width: 100%;
+            max-width: 100%;
+            -webkit-min-logical-width: 0%;
+            min-width: 0;
+        }
+
+        html, body {
+            overflow-x: hidden;
+            max-width: 100%;
+        }
+
         .business-logo {
             max-width: 150px;
             max-height: 110px;

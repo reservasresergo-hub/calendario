@@ -57,6 +57,15 @@ class Booking(models.Model):
     source = models.CharField(max_length=30, default='admin')
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["business", "employee", "booking_date", "start_time"],
+                condition=models.Q(status="confirmed"),
+                name="unique_confirmed_booking_slot",
+            )
+        ]
+
     def save(self, *args, **kwargs):
         if not self.cancel_token:
             self.cancel_token = uuid.uuid4()

@@ -67,7 +67,7 @@ SECRET_KEY = os.getenv(
     "django-insecure-pbtntlun8!3t*i%v2t-9-_*z(93p9$x38(&voy!4ep4i9_n5l7"
 )
 
-DEBUG = get_bool_env("DEBUG", True)
+DEBUG = get_bool_env("DEBUG", False)
 
 ALLOWED_HOSTS = get_list_env(
     "ALLOWED_HOSTS",
@@ -299,6 +299,15 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+    # HSTS: le dice al navegador que siempre use HTTPS con este dominio.
+    # Empezamos con un valor bajo (1 día) y se puede subir más adelante
+    # una vez confirmado que todo funciona bien por HTTPS.
+    SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "86400"))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = get_bool_env(
+        "SECURE_HSTS_INCLUDE_SUBDOMAINS", False
+    )
+    SECURE_HSTS_PRELOAD = get_bool_env("SECURE_HSTS_PRELOAD", False)
 else:
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
