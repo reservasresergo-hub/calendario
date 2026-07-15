@@ -1,6 +1,5 @@
 from datetime import date, datetime, timedelta
 import json
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction, IntegrityError
@@ -1197,6 +1196,11 @@ def edit_business(request):
         )
         if slot_interval in allowed_intervals:
             business.slot_interval_minutes = slot_interval
+
+        allowed_themes = [choice[0] for choice in business.THEME_CHOICES]
+        theme = request.POST.get("theme")
+        if theme in allowed_themes:
+            business.theme = theme
 
         business.save()
 

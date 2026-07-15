@@ -122,6 +122,85 @@
             background: #555;
             margin-left: 8px;
         }
+
+        .theme-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .theme-option {
+            display: block;
+            border: 2px solid #e2e2e2;
+            border-radius: 14px;
+            padding: 14px;
+            cursor: pointer;
+            background: #fafafa;
+            transition: border-color 0.12s ease, background 0.12s ease;
+        }
+
+        .theme-option:has(input:checked) {
+            border-color: #111;
+            background: #fff;
+        }
+
+        .theme-option input {
+            width: auto;
+            margin-right: 8px;
+            transform: scale(1.1);
+        }
+
+        .theme-option-name {
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .theme-preview {
+            margin-top: 10px;
+            border-radius: 10px;
+            padding: 14px 12px;
+            font-size: 13px;
+        }
+
+        .theme-preview-classic {
+            background: #f6f6f6;
+            border: 1px solid #ddd;
+            font-family: Arial, sans-serif;
+            color: #222;
+        }
+
+        .theme-preview-modern {
+            background: linear-gradient(180deg, #f8f8f8 0%, #efefef 100%);
+            border: 1px solid #ddd;
+            border-radius: 14px;
+            font-family: Arial, sans-serif;
+            color: #222;
+        }
+
+        .theme-preview-beauty {
+            background: linear-gradient(180deg, #fff8fb 0%, #fdf2f8 100%);
+            border: 1px solid #f5d6df;
+            border-radius: 14px;
+            font-family: Georgia, "Times New Roman", serif;
+            color: #7a3e53;
+        }
+
+        .theme-preview-btn {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            background: #111;
+            color: white;
+        }
+
+        .theme-preview-beauty .theme-preview-btn {
+            background: #b55c7a;
+            border-radius: 10px;
+            font-family: Arial, sans-serif;
+        }
     </style>
 </head>
 
@@ -157,6 +236,59 @@
                         </div>
                     </div>
                 {% endif %}
+            </div>
+
+            <div class="card">
+                <h2>Estilo de tu página de reservas</h2>
+                <p class="muted">Elige cómo se ve la página pública donde tus clientes reservan.</p>
+
+                <div class="theme-options">
+                    <label class="theme-option">
+                        <input
+                            type="radio"
+                            name="theme"
+                            value="classic"
+                            {% if business.theme == "classic" %}checked{% endif %}
+                        >
+                        <span class="theme-option-name">Clásico</span>
+                        <div class="theme-preview theme-preview-classic">
+                            Selecciona tu cita
+                            <div class="theme-preview-btn">Ver horas disponibles</div>
+                        </div>
+                    </label>
+
+                    <label class="theme-option">
+                        <input
+                            type="radio"
+                            name="theme"
+                            value="modern"
+                            {% if business.theme == "modern" %}checked{% endif %}
+                        >
+                        <span class="theme-option-name">Moderno</span>
+                        <div class="theme-preview theme-preview-modern">
+                            Elige tu cita
+                            <div class="theme-preview-btn">Ver horas disponibles</div>
+                        </div>
+                    </label>
+
+                    <label class="theme-option">
+                        <input
+                            type="radio"
+                            name="theme"
+                            value="beauty"
+                            {% if business.theme == "beauty" %}checked{% endif %}
+                        >
+                        <span class="theme-option-name">Belleza</span>
+                        <div class="theme-preview theme-preview-beauty">
+                            Elige tu cita
+                            <div class="theme-preview-btn">Ver horas disponibles</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="help-box">
+                    El cambio se aplica al momento en tu página pública de reservas. Puedes probarlo con el botón "Ver web pública" desde el panel principal.
+                </div>
             </div>
 
             <div class="card">
