@@ -1,4 +1,6 @@
 from datetime import date, datetime, timedelta
+import logging
+
 from PIL import Image, UnidentifiedImageError
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -6,15 +8,19 @@ from django.db import transaction, IntegrityError
 from django.db.models import ProtectedError
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 
 from businesses.models import Business
 from bookings.models import Booking
+from bookings.emails import send_booking_emails
 from bookings.utils import get_available_slots, has_conflict, lock_employee_day_bookings, safe_json_for_script
 from customers.models import Customer
 from employees.models import Employee, EmployeeService
 from services_app.models import Service
 from schedules.models import WeeklySchedule, BlockedSlot
 
+
+logger = logging.getLogger(__name__)
 
 def get_current_business(request):
     """
@@ -390,6 +396,7 @@ def create_booking(request):
                 end_dt = start_dt + timedelta(minutes=service.duration_minutes)
 
                 booking_created = False
+                booking = None
 
                 try:
                     with transaction.atomic():
@@ -424,7 +431,7 @@ def create_booking(request):
                             customer.email = customer_email
                             customer.save()
 
-                        Booking.objects.create(
+                        booking = Booking.objects.create(
                             business=business,
                             customer=customer,
                             employee=employee,
@@ -443,6 +450,47 @@ def create_booking(request):
                     )
 
                 if booking_created:
+                    # =====================================================
+                    # ENVIAR EMAIL DE CONFIRMACIÓN
+                    # =====================================================
+                    # Antes, una reserva creada a mano desde el panel
+                    # (a diferencia de una reserva hecha por un cliente
+                    # desde la web pública) nunca enviaba ningún email
+                    # de confirmación. Ahora se envía igual en los dos
+                    # casos. Si el email falla, la reserva ya está
+                    # creada y no se rompe nada — el fallo solo queda
+                    # registrado en los logs.
+                    # =====================================================
+
+                    try:
+                        cancel_url = request.build_absolute_uri(
+                            reverse(
+                                "cancel-booking-public",
+                                kwargs={
+                                    "business_slug": business.slug,
+                                    "cancel_token": booking.cancel_token,
+                                }
+                            )
+                        )
+
+                        email_sent = send_booking_emails(
+                            booking,
+                            cancel_url=cancel_url
+                        )
+
+                        if not email_sent:
+                            logger.warning(
+                                "La reserva %s (creada desde el panel) no envió email.",
+                                booking.id
+                            )
+
+                    except Exception:
+                        logger.exception(
+                            "La reserva %s (creada desde el panel) se creó "
+                            "correctamente, pero falló el envío de email.",
+                            booking.id
+                        )
+
                     messages.success(request, "Reserva creada correctamente.")
                     return redirect("dashboard-home")
 
