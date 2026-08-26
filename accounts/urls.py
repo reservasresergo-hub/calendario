@@ -44,4 +44,12 @@ urlpatterns = [
         views.condiciones_uso,
         name="condiciones_uso"
     ),
+
+    # TEMPORAL — quitar esta línea junto con la vista debug_email_test
+    # una vez solucionado el problema del envío de emails.
+    path(
+        "debug-email-test/",
+        views.debug_email_test,
+        name="debug_email_test"
+    ),
 ]
