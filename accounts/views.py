@@ -1,10 +1,14 @@
 from datetime import timedelta
+import traceback
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.utils.text import slugify
@@ -289,6 +293,62 @@ def logout_user(request):
         "Has cerrado sesión correctamente."
     )
     return redirect("login")
+
+
+@login_required
+def debug_email_test(request):
+    """
+    VISTA TEMPORAL DE DIAGNÓSTICO — para probar el envío de email
+    directamente en producción sin necesitar acceso por Shell (que
+    requiere plan de pago en Render). Solo accesible para superusuario.
+
+    Borrar esta vista (y su URL en accounts/urls.py) una vez
+    solucionado el problema del envío de emails — no debe quedarse
+    para siempre en el proyecto.
+    """
+
+    if not request.user.is_superuser:
+        return HttpResponse("No autorizado.", status=403)
+
+    target_email = request.GET.get("to", "")
+
+    if not target_email:
+        return HttpResponse(
+            "Añade el email de destino en la URL, así: "
+            "?to=tu_email@ejemplo.com"
+        )
+
+    output = [f"EMAIL_HOST = {settings.EMAIL_HOST}"]
+    output.append(f"EMAIL_PORT = {settings.EMAIL_PORT}")
+    output.append(f"EMAIL_USE_TLS = {settings.EMAIL_USE_TLS}")
+    output.append(f"EMAIL_USE_SSL = {settings.EMAIL_USE_SSL}")
+    output.append(f"EMAIL_HOST_USER = {settings.EMAIL_HOST_USER}")
+    output.append(
+        f"EMAIL_HOST_PASSWORD = "
+        f"{'(puesta, ' + str(len(settings.EMAIL_HOST_PASSWORD)) + ' caracteres)' if settings.EMAIL_HOST_PASSWORD else '(VACÍA)'}"
+    )
+    output.append(f"DEFAULT_FROM_EMAIL = {settings.DEFAULT_FROM_EMAIL}")
+    output.append("")
+    output.append(f"Intentando enviar un email de prueba a: {target_email}")
+    output.append("")
+
+    try:
+        send_mail(
+            subject="Email de prueba - ReserGo",
+            message="Esto es un email de prueba para diagnosticar el envío.",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[target_email],
+            fail_silently=False,
+        )
+        output.append("✅ ENVIADO SIN ERRORES.")
+
+    except Exception as e:
+        output.append("❌ FALLÓ. Error exacto:")
+        output.append(f"{type(e).__name__}: {e}")
+        output.append("")
+        output.append(traceback.format_exc())
+
+    return HttpResponse("\n".join(output), content_type="text/plain; charset=utf-8")
 
 
 @login_required
