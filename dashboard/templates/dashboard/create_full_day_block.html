@@ -97,6 +97,7 @@
 
             <div class="help-box">
                 Esto bloqueará el día completo para el empleado seleccionado.
+                Máximo 7 días de una vez — si necesitas más, hazlo en varias veces.
             </div>
 
             {% if error_message %}
@@ -128,5 +129,33 @@
             </form>
         </div>
     </div>
+
+    <script>
+        const startInput = document.getElementById("start_date");
+        const endInput = document.getElementById("end_date");
+
+        function updateEndLimits() {
+            if (!startInput.value) {
+                return;
+            }
+
+            const start = new Date(startInput.value + "T00:00:00");
+            const maxEnd = new Date(start);
+            maxEnd.setDate(maxEnd.getDate() + 7);
+
+            endInput.min = startInput.value;
+            endInput.max = maxEnd.toISOString().slice(0, 10);
+
+            if (endInput.value && endInput.value < endInput.min) {
+                endInput.value = endInput.min;
+            }
+
+            if (endInput.value && endInput.value > endInput.max) {
+                endInput.value = endInput.max;
+            }
+        }
+
+        startInput.addEventListener("change", updateEndLimits);
+    </script>
 </body>
 </html>

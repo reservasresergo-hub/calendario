@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-import json
 import logging
 
 from django.db import transaction, IntegrityError, OperationalError
@@ -9,7 +8,7 @@ from django.urls import reverse
 from businesses.models import Business
 from services_app.models import Service
 from employees.models import Employee, EmployeeService
-from bookings.utils import get_available_slots, has_conflict, lock_employee_day_bookings
+from bookings.utils import get_available_slots, has_conflict, lock_employee_day_bookings, safe_json_for_script
 from customers.models import Customer
 from bookings.models import Booking
 from bookings.emails import send_booking_emails
@@ -87,6 +86,19 @@ def booking_home(request, business_slug):
         # =========================================================
 
         if "confirm_booking" in request.POST and not error_message:
+            # =====================================================
+            # CAMPO TRAMPA PARA BOTS ("honeypot")
+            # =====================================================
+            # Un usuario real nunca ve ni rellena este campo (está
+            # oculto con CSS). Si viene relleno, es casi seguro que
+            # quien lo envió es un script automático, no una persona.
+            # Lo tratamos como un error genérico, sin dar pistas de
+            # que se ha detectado, para no ayudar a que lo esquiven.
+            # =====================================================
+
+            if (request.POST.get("website") or "").strip():
+                error_message = "No se pudo procesar la reserva. Inténtalo de nuevo."
+
             customer_name = (request.POST.get("customer_name") or "").strip()
             customer_phone = (request.POST.get("customer_phone") or "").strip()
             customer_email = (request.POST.get("customer_email") or "").strip()
@@ -95,9 +107,9 @@ def booking_home(request, business_slug):
             # VALIDAR DATOS DEL CLIENTE (por si se salta el formulario)
             # =====================================================
 
-            if not customer_name:
+            if not error_message and not customer_name:
                 error_message = "Falta el nombre del cliente."
-            elif not customer_phone:
+            elif not error_message and not customer_phone:
                 error_message = "Falta el teléfono del cliente."
 
             booking_date_obj = datetime.strptime(
@@ -378,7 +390,7 @@ def booking_home(request, business_slug):
         "selected_service_id": selected_service_id,
         "selected_date": selected_date,
         "selected_employee_id": selected_employee_id,
-        "employee_service_data_json": json.dumps(employee_service_data),
+        "employee_service_data_json": safe_json_for_script(employee_service_data),
         "error_message": error_message,
     }
 

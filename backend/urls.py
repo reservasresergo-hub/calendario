@@ -16,9 +16,10 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve as serve_static
 
 from accounts.views import login_user, logout_user, demo_login
 
@@ -45,3 +46,22 @@ if settings.DEBUG:
         settings.MEDIA_URL,
         document_root=settings.MEDIA_ROOT
     )
+else:
+    # WhiteNoise solo sirve los archivos estáticos (STATIC_URL), no los
+    # archivos subidos por los negocios (logos, en MEDIA_URL). Sin esta
+    # ruta, cualquier logo subido da 404 en producción, aunque el archivo
+    # sí se haya guardado correctamente en el servidor.
+    #
+    # Aviso importante que sigue pendiente: en Render, el disco donde se
+    # guardan estos archivos no es persistente entre despliegues — un
+    # logo subido puede desaparecer en el siguiente deploy. Para que
+    # los logos sean fiables a largo plazo, lo correcto es moverlos a
+    # almacenamiento en la nube (por ejemplo Cloudinary o S3), no solo
+    # arreglar esta ruta.
+    urlpatterns += [
+        re_path(
+            r"^media/(?P<path>.*)$",
+            serve_static,
+            {"document_root": settings.MEDIA_ROOT},
+        ),
+    ]

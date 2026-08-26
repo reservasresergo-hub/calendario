@@ -1,10 +1,31 @@
 from datetime import datetime, timedelta
+import json
 
 from bookings.models import Booking
 from businesses.models import Business
 from employees.models import EmployeeService
 from schedules.models import WeeklySchedule, BlockedSlot
 from services_app.models import Service
+
+
+def safe_json_for_script(data):
+    """
+    Igual que json.dumps(), pero seguro para insertar el resultado dentro
+    de una etiqueta <script> con el filtro |safe de Django.
+
+    json.dumps() normal NO escapa "<", ">" ni "&". Si algún valor (por
+    ejemplo, el nombre de un empleado escrito por el propio negocio)
+    contuviera algo como "</script><script>...", el navegador cerraría
+    la etiqueta <script> ahí mismo y ejecutaría ese código en el
+    navegador de un cliente real visitando la página pública de
+    reservas. Esto evita ese problema sin cambiar el JSON en sí.
+    """
+    return (
+        json.dumps(data)
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("&", "\\u0026")
+    )
 
 
 def lock_employee_day_bookings(business_id, employee_id, date):

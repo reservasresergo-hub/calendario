@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 
 
 class BusinessRegisterForm(forms.Form):
@@ -43,3 +44,15 @@ class BusinessRegisterForm(forms.Form):
             )
 
         return email
+
+    def clean_password(self):
+        password = self.cleaned_data["password"]
+
+        # Aplica las mismas reglas de seguridad que ya usa el cambio de
+        # contraseña normal (longitud mínima, que no sea una contraseña
+        # demasiado común, que no sea solo números, etc.). Antes este
+        # formulario no comprobaba nada, así que se podía crear una
+        # cuenta de negocio real con una contraseña como "1234".
+        validate_password(password)
+
+        return password

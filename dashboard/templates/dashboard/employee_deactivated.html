@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Citas por reubicar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            color: #222;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 26px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin-bottom: 22px;
+        }
+
+        h1 { margin-top: 0; }
+
+        .muted { color: #666; }
+
+        .success-box {
+            background: #f4fff8;
+            border: 1px solid #cdeedb;
+            color: #16784b;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        .warning-box {
+            background: #fff8df;
+            border: 1px solid #f0dfa4;
+            color: #6f5700;
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background: #fafafa;
+        }
+
+        .phone {
+            font-family: monospace;
+            font-size: 15px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: black;
+            color: white;
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 9px;
+            margin-top: 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+        }
+    </style>
+{% include "dashboard/_theme_vars.html" %}
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Citas por reubicar</h1>
+
+            <div class="success-box">
+                {{ employee.full_name }} se ha marcado como inactivo correctamente.
+            </div>
+
+            <div class="warning-box">
+                <strong>Importante:</strong> {{ employee.full_name }} todavía tiene
+                {{ future_bookings|length }} cita{{ future_bookings|length|pluralize }}
+                confirmada{{ future_bookings|length|pluralize }} pendiente{{ future_bookings|length|pluralize }}
+                en el futuro. Al desactivarlo, esas citas <strong>no se cancelan ni se
+                reasignan solas</strong> — siguen tal cual, así que tendrás que
+                contactar tú misma con estos clientes para reubicarlas (asignarlas
+                a otro empleado, cambiar la hora, o cancelarlas si no es posible).
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Servicio</th>
+                        <th>Cliente</th>
+                        <th>Teléfono</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in future_bookings %}
+                        <tr>
+                            <td>{{ booking.booking_date }}</td>
+                            <td>{{ booking.start_time }} - {{ booking.end_time }}</td>
+                            <td>{{ booking.service.name }}</td>
+                            <td>{{ booking.customer.full_name }}</td>
+                            <td class="phone">{{ booking.customer.phone }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <a href="/dashboard/employees/" class="btn">Entendido, volver</a>
+        </div>
+    </div>
+</body>
+</html>

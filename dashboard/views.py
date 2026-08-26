@@ -1,14 +1,15 @@
 from datetime import date, datetime, timedelta
-import json
+from PIL import Image, UnidentifiedImageError
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction, IntegrityError
+from django.db.models import ProtectedError
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
 from businesses.models import Business
 from bookings.models import Booking
-from bookings.utils import get_available_slots, has_conflict, lock_employee_day_bookings
+from bookings.utils import get_available_slots, has_conflict, lock_employee_day_bookings, safe_json_for_script
 from customers.models import Customer
 from employees.models import Employee, EmployeeService
 from services_app.models import Service
@@ -344,109 +345,115 @@ def create_booking(request):
     error_message = ""
 
     if request.method == "POST":
-        customer_name = request.POST.get("customer_name")
-        customer_phone = request.POST.get("customer_phone")
-        customer_email = request.POST.get("customer_email")
+        customer_name = (request.POST.get("customer_name") or "").strip()
+        customer_phone = (request.POST.get("customer_phone") or "").strip()
+        customer_email = (request.POST.get("customer_email") or "").strip()
 
         service_id = request.POST.get("service_id")
         employee_id = request.POST.get("employee_id")
         booking_date = request.POST.get("booking_date")
         start_time = request.POST.get("start_time")
 
-        try:
-            service = get_object_or_404(
-                Service,
-                id=int(service_id),
-                business=business,
-                active=True
-            )
+        if not customer_name:
+            error_message = "Falta el nombre del cliente."
+        elif not customer_phone:
+            error_message = "Falta el teléfono del cliente."
 
-            employee = get_object_or_404(
-                Employee,
-                id=int(employee_id),
-                business=business,
-                active=True,
-                employee_services__service=service
-            )
-
-            booking_date_obj = datetime.strptime(
-                booking_date,
-                "%Y-%m-%d"
-            ).date()
-
-            start_time_obj = datetime.strptime(
-                start_time,
-                "%H:%M"
-            ).time()
-
-            start_dt = datetime.combine(booking_date_obj, start_time_obj)
-            end_dt = start_dt + timedelta(minutes=service.duration_minutes)
-
-            booking_created = False
-
+        if not error_message:
             try:
-                with transaction.atomic():
-                    lock_employee_day_bookings(
-                        business_id=business.id,
-                        employee_id=employee.id,
-                        date=booking_date_obj,
-                    )
-
-                    conflict_exists = has_conflict(
-                        business_id=business.id,
-                        employee_id=employee.id,
-                        date=booking_date_obj,
-                        start_time=start_time_obj,
-                        end_time=end_dt.time(),
-                    )
-
-                    if conflict_exists:
-                        raise IntegrityError("conflict")
-
-                    customer, created = Customer.objects.get_or_create(
-                        business=business,
-                        phone=customer_phone,
-                        defaults={
-                            "full_name": customer_name,
-                            "email": customer_email,
-                        }
-                    )
-
-                    if not created:
-                        customer.full_name = customer_name
-                        customer.email = customer_email
-                        customer.save()
-
-                    Booking.objects.create(
-                        business=business,
-                        customer=customer,
-                        employee=employee,
-                        service=service,
-                        booking_date=booking_date_obj,
-                        start_time=start_time_obj,
-                        source="dashboard"
-                    )
-
-                    booking_created = True
-
-            except IntegrityError:
-                error_message = (
-                    "Ese hueco ya está ocupado o bloqueado. "
-                    "Elige otra hora."
+                service = get_object_or_404(
+                    Service,
+                    id=int(service_id),
+                    business=business,
+                    active=True
                 )
 
-            if booking_created:
-                messages.success(request, "Reserva creada correctamente.")
-                return redirect("dashboard-home")
+                employee = get_object_or_404(
+                    Employee,
+                    id=int(employee_id),
+                    business=business,
+                    active=True,
+                    employee_services__service=service
+                )
 
-        except Exception:
-            error_message = "No se pudo crear la reserva. Revisa los datos."
+                booking_date_obj = datetime.strptime(
+                    booking_date,
+                    "%Y-%m-%d"
+                ).date()
+
+                start_time_obj = datetime.strptime(
+                    start_time,
+                    "%H:%M"
+                ).time()
+
+                start_dt = datetime.combine(booking_date_obj, start_time_obj)
+                end_dt = start_dt + timedelta(minutes=service.duration_minutes)
+
+                booking_created = False
+
+                try:
+                    with transaction.atomic():
+                        lock_employee_day_bookings(
+                            business_id=business.id,
+                            employee_id=employee.id,
+                            date=booking_date_obj,
+                        )
+
+                        conflict_exists = has_conflict(
+                            business_id=business.id,
+                            employee_id=employee.id,
+                            date=booking_date_obj,
+                            start_time=start_time_obj,
+                            end_time=end_dt.time(),
+                        )
+
+                        if conflict_exists:
+                            raise IntegrityError("conflict")
+
+                        customer, created = Customer.objects.get_or_create(
+                            business=business,
+                            phone=customer_phone,
+                            defaults={
+                                "full_name": customer_name,
+                                "email": customer_email,
+                            }
+                        )
+
+                        if not created:
+                            customer.full_name = customer_name
+                            customer.email = customer_email
+                            customer.save()
+
+                        Booking.objects.create(
+                            business=business,
+                            customer=customer,
+                            employee=employee,
+                            service=service,
+                            booking_date=booking_date_obj,
+                            start_time=start_time_obj,
+                            source="dashboard"
+                        )
+
+                        booking_created = True
+
+                except IntegrityError:
+                    error_message = (
+                        "Ese hueco ya está ocupado o bloqueado. "
+                        "Elige otra hora."
+                    )
+
+                if booking_created:
+                    messages.success(request, "Reserva creada correctamente.")
+                    return redirect("dashboard-home")
+
+            except Exception:
+                error_message = "No se pudo crear la reserva. Revisa los datos."
 
     context = {
         "business": business,
         "services": services,
         "employees": employees,
-        "employee_service_data_json": json.dumps(employee_service_data),
+        "employee_service_data_json": safe_json_for_script(employee_service_data),
         "error_message": error_message,
     }
 
@@ -746,21 +753,42 @@ def create_service(request):
     error_message = ""
 
     if request.method == "POST":
-        name = request.POST.get("name")
+        name = (request.POST.get("name") or "").strip()
         duration = request.POST.get("duration")
         price = request.POST.get("price")
 
         try:
-            Service.objects.create(
-                business=business,
-                name=name,
-                duration_minutes=int(duration),
-                price=float(price) if price else None,
-                active=True
-            )
+            duration_value = int(duration)
+            price_value = float(price) if price else None
 
-            messages.success(request, "Servicio creado correctamente.")
-            return redirect("service-list")
+            # =====================================================
+            # VALIDAR DURACIÓN Y PRECIO
+            # =====================================================
+            # Una duración de 0 minutos parece inofensiva, pero rompe
+            # la protección contra dobles reservas: dos citas de 0
+            # minutos a la misma hora exacta no se detectan como
+            # solapadas entre sí, así que dos clientes podrían
+            # "reservar" el mismo instante sin ningún aviso.
+            # =====================================================
+
+            if not name:
+                error_message = "Falta el nombre del servicio."
+            elif duration_value <= 0:
+                error_message = "La duración debe ser de al menos 1 minuto."
+            elif price_value is not None and price_value < 0:
+                error_message = "El precio no puede ser negativo."
+
+            if not error_message:
+                Service.objects.create(
+                    business=business,
+                    name=name,
+                    duration_minutes=duration_value,
+                    price=price_value,
+                    active=True
+                )
+
+                messages.success(request, "Servicio creado correctamente.")
+                return redirect("service-list")
 
         except Exception:
             error_message = "Error al crear el servicio."
@@ -769,7 +797,6 @@ def create_service(request):
         "business": business,
         "error_message": error_message
     })
-
 
 @login_required
 def edit_service(request, service_id):
@@ -788,17 +815,28 @@ def edit_service(request, service_id):
 
     if request.method == "POST":
         try:
-            service.name = request.POST.get("name")
-            service.duration_minutes = int(request.POST.get("duration"))
+            name = (request.POST.get("name") or "").strip()
+            duration_value = int(request.POST.get("duration"))
 
             price = request.POST.get("price")
-            service.price = float(price) if price else None
+            price_value = float(price) if price else None
 
-            service.active = request.POST.get("active") == "on"
-            service.save()
+            if not name:
+                error_message = "Falta el nombre del servicio."
+            elif duration_value <= 0:
+                error_message = "La duración debe ser de al menos 1 minuto."
+            elif price_value is not None and price_value < 0:
+                error_message = "El precio no puede ser negativo."
 
-            messages.success(request, "Servicio actualizado correctamente.")
-            return redirect("service-list")
+            if not error_message:
+                service.name = name
+                service.duration_minutes = duration_value
+                service.price = price_value
+                service.active = request.POST.get("active") == "on"
+                service.save()
+
+                messages.success(request, "Servicio actualizado correctamente.")
+                return redirect("service-list")
 
         except Exception:
             error_message = "Error al actualizar el servicio."
@@ -826,11 +864,23 @@ def delete_service(request, service_id):
         business=business
     )
 
-    service.delete()
+    try:
+        service.delete()
+        messages.success(request, "Servicio eliminado correctamente.")
 
-    messages.success(request, "Servicio eliminado correctamente.")
+    except ProtectedError:
+        # El servicio ya tiene reservas asociadas (pasadas o futuras).
+        # Antes esto habría borrado el servicio Y todas esas reservas
+        # de golpe, sin avisar. Ahora se bloquea, y se indica la
+        # alternativa correcta: desactivarlo en vez de borrarlo.
+        messages.error(
+            request,
+            "No se puede eliminar: este servicio tiene reservas asociadas. "
+            "Márcalo como inactivo en su lugar (así deja de ofrecerse, "
+            "pero conservas el historial de reservas)."
+        )
+
     return redirect("service-list")
-
 
 @login_required
 def employee_list(request):
@@ -859,20 +909,23 @@ def create_employee(request):
     error_message = ""
 
     if request.method == "POST":
-        full_name = request.POST.get("full_name")
+        full_name = (request.POST.get("full_name") or "").strip()
 
-        try:
-            Employee.objects.create(
-                business=business,
-                full_name=full_name,
-                active=True
-            )
+        if not full_name:
+            error_message = "Falta el nombre del empleado."
+        else:
+            try:
+                Employee.objects.create(
+                    business=business,
+                    full_name=full_name,
+                    active=True
+                )
 
-            messages.success(request, "Empleado creado correctamente.")
-            return redirect("employee-list")
+                messages.success(request, "Empleado creado correctamente.")
+                return redirect("employee-list")
 
-        except Exception:
-            error_message = "Error al crear el empleado."
+            except Exception:
+                error_message = "Error al crear el empleado."
 
     return render(request, "dashboard/create_employee.html", {
         "business": business,
@@ -893,17 +946,63 @@ def edit_employee(request, employee_id):
         business=business
     )
 
-    if request.method == "POST":
-        employee.full_name = request.POST.get("full_name")
-        employee.active = request.POST.get("active") == "on"
-        employee.save()
+    error_message = ""
 
-        messages.success(request, "Empleado actualizado correctamente.")
-        return redirect("employee-list")
+    if request.method == "POST":
+        full_name = (request.POST.get("full_name") or "").strip()
+
+        if not full_name:
+            error_message = "Falta el nombre del empleado."
+        else:
+            was_active = employee.active
+
+            employee.full_name = full_name
+            employee.active = request.POST.get("active") == "on"
+            employee.save()
+
+            # =====================================================
+            # AVISO DE CITAS FUTURAS AL DESACTIVAR UN EMPLEADO
+            # =====================================================
+            # Desactivar a un empleado (por ejemplo, porque deja el
+            # negocio) no toca sus citas futuras ya confirmadas: se
+            # quedan tal cual, asignadas a él. Antes esto pasaba
+            # desapercibido — el cliente llegaría esperando a alguien
+            # que ya no está, sin que nadie se hubiera dado cuenta.
+            # Ahora, si al desactivar quedan citas futuras, se muestra
+            # una lista clara con los datos de contacto de cada
+            # cliente, para que el propio negocio decida cómo
+            # reubicarlas (llamando, reasignando a otro empleado,
+            # cancelando, etc. — eso lo decide el negocio, no el
+            # sistema).
+            # =====================================================
+
+            if was_active and not employee.active:
+                future_bookings = Booking.objects.filter(
+                    employee=employee,
+                    status="confirmed",
+                    booking_date__gte=date.today(),
+                ).select_related("customer", "service").order_by(
+                    "booking_date", "start_time"
+                )
+
+                if future_bookings.exists():
+                    return render(
+                        request,
+                        "dashboard/employee_deactivated.html",
+                        {
+                            "business": business,
+                            "employee": employee,
+                            "future_bookings": future_bookings,
+                        }
+                    )
+
+            messages.success(request, "Empleado actualizado correctamente.")
+            return redirect("employee-list")
 
     return render(request, "dashboard/edit_employee.html", {
         "business": business,
         "employee": employee,
+        "error_message": error_message,
     })
 
 
@@ -923,9 +1022,22 @@ def delete_employee(request, employee_id):
         business=business
     )
 
-    employee.delete()
+    try:
+        employee.delete()
+        messages.success(request, "Empleado eliminado correctamente.")
 
-    messages.success(request, "Empleado eliminado correctamente.")
+    except ProtectedError:
+        # El empleado ya tiene reservas asociadas (pasadas o futuras).
+        # Antes esto habría borrado el empleado Y todas sus reservas
+        # de golpe, sin avisar. Ahora se bloquea, y se indica la
+        # alternativa correcta: desactivarlo en vez de borrarlo.
+        messages.error(
+            request,
+            "No se puede eliminar: este empleado tiene reservas asociadas. "
+            "Márcalo como inactivo en su lugar (así deja de aparecer para "
+            "nuevas reservas, pero conservas su historial)."
+        )
+
     return redirect("employee-list")
 
 
@@ -1006,7 +1118,12 @@ def manage_employee_schedule(request, employee_id):
         (6, "Domingo"),
     ]
 
+    error_message = ""
+
     if request.method == "POST":
+        day_names = dict(weekdays)
+        pending_days = []
+
         for weekday, day_name in weekdays:
             active = request.POST.get(f"active_{weekday}") == "on"
             start_morning = request.POST.get(f"start_morning_{weekday}")
@@ -1017,35 +1134,69 @@ def manage_employee_schedule(request, employee_id):
             has_morning = bool(start_morning and end_morning)
             has_afternoon = bool(start_afternoon and end_afternoon)
 
-            if active and (has_morning or has_afternoon):
-                schedule, created = WeeklySchedule.objects.get_or_create(
-                    employee=employee,
-                    weekday=weekday,
-                    defaults={
-                        "start_time_morning": start_morning if has_morning else None,
-                        "end_time_morning": end_morning if has_morning else None,
-                        "start_time_afternoon": start_afternoon if has_afternoon else None,
-                        "end_time_afternoon": end_afternoon if has_afternoon else None,
-                        "active": True,
-                    }
+            # =====================================================
+            # VALIDAR QUE CADA TRAMO TENGA SENTIDO (INICIO < FIN)
+            # =====================================================
+            # Antes se podía guardar, por ejemplo, un horario de
+            # mañana de 18:00 a 09:00. No daba ningún error, pero el
+            # empleado se quedaba sin ningún hueco disponible ese día
+            # sin ninguna explicación visible en el panel.
+            # =====================================================
+
+            if has_morning and start_morning >= end_morning:
+                error_message = (
+                    f"{day_name}: la hora de inicio de la mañana "
+                    f"debe ser antes que la de fin."
                 )
+                break
 
-                if not created:
-                    schedule.start_time_morning = start_morning if has_morning else None
-                    schedule.end_time_morning = end_morning if has_morning else None
-                    schedule.start_time_afternoon = start_afternoon if has_afternoon else None
-                    schedule.end_time_afternoon = end_afternoon if has_afternoon else None
-                    schedule.active = True
-                    schedule.save()
+            if has_afternoon and start_afternoon >= end_afternoon:
+                error_message = (
+                    f"{day_name}: la hora de inicio de la tarde "
+                    f"debe ser antes que la de fin."
+                )
+                break
 
-            else:
-                WeeklySchedule.objects.filter(
-                    employee=employee,
-                    weekday=weekday
-                ).update(active=False)
+            pending_days.append((
+                weekday, active, has_morning, has_afternoon,
+                start_morning, end_morning, start_afternoon, end_afternoon,
+            ))
 
-        messages.success(request, "Horario semanal actualizado correctamente.")
-        return redirect("employee-list")
+        if not error_message:
+            with transaction.atomic():
+                for (
+                    weekday, active, has_morning, has_afternoon,
+                    start_morning, end_morning, start_afternoon, end_afternoon,
+                ) in pending_days:
+                    if active and (has_morning or has_afternoon):
+                        schedule, created = WeeklySchedule.objects.get_or_create(
+                            employee=employee,
+                            weekday=weekday,
+                            defaults={
+                                "start_time_morning": start_morning if has_morning else None,
+                                "end_time_morning": end_morning if has_morning else None,
+                                "start_time_afternoon": start_afternoon if has_afternoon else None,
+                                "end_time_afternoon": end_afternoon if has_afternoon else None,
+                                "active": True,
+                            }
+                        )
+
+                        if not created:
+                            schedule.start_time_morning = start_morning if has_morning else None
+                            schedule.end_time_morning = end_morning if has_morning else None
+                            schedule.start_time_afternoon = start_afternoon if has_afternoon else None
+                            schedule.end_time_afternoon = end_afternoon if has_afternoon else None
+                            schedule.active = True
+                            schedule.save()
+
+                    else:
+                        WeeklySchedule.objects.filter(
+                            employee=employee,
+                            weekday=weekday
+                        ).update(active=False)
+
+            messages.success(request, "Horario semanal actualizado correctamente.")
+            return redirect("employee-list")
 
     schedules = {
         schedule.weekday: schedule
@@ -1087,8 +1238,8 @@ def manage_employee_schedule(request, employee_id):
         "business": business,
         "employee": employee,
         "schedule_rows": schedule_rows,
+        "error_message": error_message,
     })
-
 
 @login_required
 def create_full_day_block(request):
@@ -1131,19 +1282,29 @@ def create_full_day_block(request):
                 error_message = (
                     "La fecha de inicio no puede ser posterior a la fecha de fin."
                 )
+            elif (end_date_obj - start_date_obj).days > 7:
+                # Límite de seguridad: si necesitas bloquear más de una
+                # semana (vacaciones largas, baja...), hazlo en varias
+                # veces. Esto evita bloqueos enormes por un año mal
+                # escrito y mantiene la petición siempre rápida.
+                error_message = (
+                    "No se puede bloquear más de una semana de una vez. "
+                    "Si necesitas más días, hazlo en varias veces."
+                )
             else:
-                current_date = start_date_obj
+                with transaction.atomic():
+                    current_date = start_date_obj
 
-                while current_date <= end_date_obj:
-                    BlockedSlot.objects.get_or_create(
-                        business=business,
-                        employee=employee,
-                        date=current_date,
-                        start_time="00:00",
-                        end_time="23:59"
-                    )
+                    while current_date <= end_date_obj:
+                        BlockedSlot.objects.get_or_create(
+                            business=business,
+                            employee=employee,
+                            date=current_date,
+                            start_time="00:00",
+                            end_time="23:59"
+                        )
 
-                    current_date += timedelta(days=1)
+                        current_date += timedelta(days=1)
 
                 messages.success(request, "Día(s) bloqueado(s) correctamente.")
                 return redirect("dashboard-home")
@@ -1161,52 +1322,73 @@ def create_full_day_block(request):
 @login_required
 def edit_business(request):
     business = get_current_business(request)
-
     if not business:
         return redirect("dashboard-home")
-
     if request.method == "POST":
         business.name = request.POST.get("name")
         business.phone = request.POST.get("phone")
         business.email = request.POST.get("email")
-
         if request.POST.get("delete_logo") == "on":
             if business.logo:
                 business.logo.delete(save=False)
             business.logo = None
-
         elif request.FILES.get("logo"):
-            business.logo = request.FILES.get("logo")
+            logo_file = request.FILES.get("logo")
 
+            # =====================================================
+            # VALIDAR QUE EL "LOGO" ES REALMENTE UNA IMAGEN
+            # =====================================================
+            # Antes se guardaba cualquier archivo tal cual, confiando
+            # solo en su nombre. Alguien podía subir un archivo .html
+            # con código dentro, y al visitarlo directamente desde su
+            # enlace público, el navegador lo habría ejecutado como
+            # una página real de tu dominio. Aquí comprobamos el
+            # contenido real del archivo (no el nombre) con Pillow,
+            # y limitamos el tamaño para evitar subidas enormes.
+            # =====================================================
+
+            max_logo_size_bytes = 5 * 1024 * 1024  # 5 MB
+
+            if logo_file.size > max_logo_size_bytes:
+                messages.error(
+                    request,
+                    "El logo no se ha guardado: el archivo pesa más de 5 MB."
+                )
+            else:
+                try:
+                    with Image.open(logo_file) as img:
+                        img.verify()
+
+                    logo_file.seek(0)
+                    business.logo = logo_file
+
+                except (UnidentifiedImageError, OSError, ValueError):
+                    messages.error(
+                        request,
+                        "El logo no se ha guardado: el archivo no es una imagen válida."
+                    )
         business.allow_past_bookings = (
             request.POST.get("allow_past_bookings") == "on"
         )
-
         business.min_advance_hours = int(
             request.POST.get("min_advance_hours") or 0
         )
-
         business.max_advance_days = int(
             request.POST.get("max_advance_days") or 31
         )
-
         allowed_intervals = [choice[0] for choice in business.SLOT_INTERVAL_CHOICES]
         slot_interval = int(
             request.POST.get("slot_interval_minutes") or business.slot_interval_minutes
         )
         if slot_interval in allowed_intervals:
             business.slot_interval_minutes = slot_interval
-
         allowed_themes = [choice[0] for choice in business.THEME_CHOICES]
         theme = request.POST.get("theme")
         if theme in allowed_themes:
             business.theme = theme
-
         business.save()
-
         messages.success(request, "Datos del negocio actualizados correctamente.")
         return redirect("dashboard-home")
-
     return render(request, "dashboard/edit_business.html", {
         "business": business
     })

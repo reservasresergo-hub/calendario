@@ -59,6 +59,15 @@
             margin: 0;
         }
 
+        .error-box {
+            background: #fff4f4;
+            border: 1px solid #f0caca;
+            color: #9b1c1c;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 18px;
+        }
+
         .btn {
             display: inline-block;
             background: black;
@@ -85,6 +94,12 @@
         <div class="card">
             <h1>Editar empleado</h1>
             <p class="muted">Modifica los datos de {{ employee.full_name }}.</p>
+
+            {% if error_message %}
+                <div class="error-box">
+                    {{ error_message }}
+                </div>
+            {% endif %}
 
             <form method="post">
                 {% csrf_token %}

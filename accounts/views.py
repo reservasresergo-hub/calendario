@@ -1,15 +1,27 @@
+from datetime import timedelta
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
+from django.utils import timezone
 from django.utils.text import slugify
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 
 from businesses.models import Business
 from .forms import BusinessRegisterForm
+from .models import LoginAttempt
+
+
+# Tras este número de intentos fallidos seguidos, se bloquea la cuenta
+# temporalmente. Se cuentan solo los fallos dentro de la ventana de
+# tiempo de abajo — pasado ese tiempo, los intentos antiguos ya no
+# cuentan.
+MAX_FAILED_LOGIN_ATTEMPTS = 5
+LOGIN_LOCKOUT_WINDOW_MINUTES = 15
 
 
 
@@ -130,8 +142,39 @@ def login_user(request):
         return redirect("dashboard-home")
 
     if request.method == "POST":
-        email = request.POST.get("username")
+        email = (request.POST.get("username") or "").strip()
         password = request.POST.get("password")
+
+        # =====================================================
+        # PROTECCIÓN CONTRA FUERZA BRUTA
+        # =====================================================
+        # Antes se podían probar contraseñas sin límite contra la
+        # misma cuenta. Ahora, si hay demasiados fallos seguidos en
+        # poco tiempo, se bloquea el acceso temporalmente, aunque la
+        # contraseña que se envíe a partir de ahí sea la correcta.
+        # =====================================================
+
+        window_start = timezone.now() - timedelta(minutes=LOGIN_LOCKOUT_WINDOW_MINUTES)
+
+        # Aprovechamos para limpiar los intentos ya caducados de esta
+        # misma cuenta, para que la tabla no crezca sin límite.
+        LoginAttempt.objects.filter(
+            username=email,
+            attempted_at__lt=window_start,
+        ).delete()
+
+        recent_failed_attempts = LoginAttempt.objects.filter(
+            username=email,
+            attempted_at__gte=window_start,
+        ).count()
+
+        if recent_failed_attempts >= MAX_FAILED_LOGIN_ATTEMPTS:
+            messages.error(
+                request,
+                "Demasiados intentos fallidos. Por seguridad, espera unos "
+                "minutos antes de volver a intentarlo."
+            )
+            return redirect("login")
 
         user = authenticate(
             request,
@@ -140,8 +183,14 @@ def login_user(request):
         )
 
         if user is not None:
+            # Login correcto: los fallos anteriores de esta cuenta ya
+            # no importan, se limpian.
+            LoginAttempt.objects.filter(username=email).delete()
+
             login(request, user)
             return redirect("dashboard-home")
+
+        LoginAttempt.objects.create(username=email)
 
         messages.error(
             request,

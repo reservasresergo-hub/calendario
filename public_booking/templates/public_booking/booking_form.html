@@ -119,6 +119,19 @@
             margin-bottom: 22px;
         }
 
+        /* Campo trampa para bots ("honeypot"): un usuario real nunca lo
+           ve ni lo rellena, porque está fuera de la pantalla. Un bot
+           automático que rellena formularios a ciegas sí suele
+           rellenarlo, y eso es justo lo que usamos para detectarlo. */
+        .website-field {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+
         @media (max-width: 640px) {
             body.theme-classic .container,
             .card {
@@ -170,6 +183,11 @@
 
         <label>Email</label>
         <input type="email" name="customer_email">
+
+        <div class="website-field" aria-hidden="true">
+            <label for="website">No rellenar este campo</label>
+            <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+        </div>
 
         <button type="submit" name="confirm_booking">Confirmar reserva</button>
     </form>

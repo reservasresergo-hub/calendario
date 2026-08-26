@@ -22,17 +22,17 @@ class Booking(models.Model):
     )
     customer = models.ForeignKey(
         Customer,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='bookings'
     )
     employee = models.ForeignKey(
         Employee,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='bookings'
     )
     service = models.ForeignKey(
         Service,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='bookings'
     )
 
