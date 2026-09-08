@@ -706,40 +706,55 @@ def edit_booking(request, booking_id):
             date_obj = datetime.strptime(booking_date, "%Y-%m-%d").date()
             time_obj = datetime.strptime(start_time, "%H:%M").time()
 
+            # =================================================
+            # RESPETAR "PERMITIR RESERVAS EN FECHAS PASADAS"
+            # =================================================
+            # Mismo caso que en la creación manual: editar una
+            # reserva para moverla a una fecha pasada tampoco se
+            # comprobaba antes.
+            # =================================================
+
+            if (
+                not business.allow_past_bookings
+                and date_obj < date.today()
+            ):
+                error_message = "No se puede mover una reserva a una fecha pasada."
+
             start_dt = datetime.combine(date_obj, time_obj)
             end_dt = start_dt + timedelta(minutes=service.duration_minutes)
 
             saved = False
 
-            try:
-                with transaction.atomic():
-                    lock_employee_day_bookings(
-                        business_id=business.id,
-                        employee_id=employee.id,
-                        date=date_obj,
-                    )
+            if not error_message:
+                try:
+                    with transaction.atomic():
+                        lock_employee_day_bookings(
+                            business_id=business.id,
+                            employee_id=employee.id,
+                            date=date_obj,
+                        )
 
-                    conflict = has_conflict(
-                        business_id=business.id,
-                        employee_id=employee.id,
-                        date=date_obj,
-                        start_time=time_obj,
-                        end_time=end_dt.time(),
-                        exclude_booking_id=booking.id,
-                    )
+                        conflict = has_conflict(
+                            business_id=business.id,
+                            employee_id=employee.id,
+                            date=date_obj,
+                            start_time=time_obj,
+                            end_time=end_dt.time(),
+                            exclude_booking_id=booking.id,
+                        )
 
-                    if conflict:
-                        raise IntegrityError("conflict")
+                        if conflict:
+                            raise IntegrityError("conflict")
 
-                    booking.service = service
-                    booking.employee = employee
-                    booking.booking_date = date_obj
-                    booking.start_time = time_obj
-                    booking.save()
-                    saved = True
+                        booking.service = service
+                        booking.employee = employee
+                        booking.booking_date = date_obj
+                        booking.start_time = time_obj
+                        booking.save()
+                        saved = True
 
-            except IntegrityError:
-                error_message = "Ese horario no está disponible."
+                except IntegrityError:
+                    error_message = "Ese horario no está disponible."
 
             if saved:
                 messages.success(request, "Reserva editada correctamente.")
