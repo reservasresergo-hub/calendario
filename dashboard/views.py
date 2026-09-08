@@ -392,62 +392,80 @@ def create_booking(request):
                     "%H:%M"
                 ).time()
 
+                # =====================================================
+                # RESPETAR "PERMITIR RESERVAS EN FECHAS PASADAS"
+                # =====================================================
+                # Antes, esta pantalla (reserva manual desde el panel)
+                # no comprobaba la fecha en absoluto: se podía crear
+                # una reserva para ayer, o para hace un año, aunque el
+                # negocio tuviera desactivada esa opción en
+                # Configuración. Ahora respeta la misma regla que ya
+                # se aplicaba en la web pública.
+                # =====================================================
+
+                if (
+                    not business.allow_past_bookings
+                    and booking_date_obj < date.today()
+                ):
+                    error_message = "No se puede crear una reserva en una fecha pasada."
+
                 start_dt = datetime.combine(booking_date_obj, start_time_obj)
                 end_dt = start_dt + timedelta(minutes=service.duration_minutes)
 
                 booking_created = False
                 booking = None
 
-                try:
-                    with transaction.atomic():
-                        lock_employee_day_bookings(
-                            business_id=business.id,
-                            employee_id=employee.id,
-                            date=booking_date_obj,
+                if not error_message:
+                    try:
+                        with transaction.atomic():
+                            lock_employee_day_bookings(
+                                business_id=business.id,
+                                employee_id=employee.id,
+                                date=booking_date_obj,
+                            )
+
+                            conflict_exists = has_conflict(
+                                business_id=business.id,
+                                employee_id=employee.id,
+                                date=booking_date_obj,
+                                start_time=start_time_obj,
+                                end_time=end_dt.time(),
+                            )
+
+                            if conflict_exists:
+                                raise IntegrityError("conflict")
+
+                            customer, created = Customer.objects.get_or_create(
+                                business=business,
+                                phone=customer_phone,
+                                defaults={
+                                    "full_name": customer_name,
+                                    "email": customer_email,
+                                }
+                            )
+
+                            if not created:
+                                customer.full_name = customer_name
+                                customer.email = customer_email
+                                customer.save()
+
+                            booking = Booking.objects.create(
+                                business=business,
+                                customer=customer,
+                                employee=employee,
+                                service=service,
+                                booking_date=booking_date_obj,
+                                start_time=start_time_obj,
+                                source="dashboard"
+                            )
+
+                            booking_created = True
+
+                    except IntegrityError:
+                        error_message = (
+                            "Ese hueco ya está ocupado o bloqueado. "
+                            "Elige otra hora."
                         )
-
-                        conflict_exists = has_conflict(
-                            business_id=business.id,
-                            employee_id=employee.id,
-                            date=booking_date_obj,
-                            start_time=start_time_obj,
-                            end_time=end_dt.time(),
-                        )
-
-                        if conflict_exists:
-                            raise IntegrityError("conflict")
-
-                        customer, created = Customer.objects.get_or_create(
-                            business=business,
-                            phone=customer_phone,
-                            defaults={
-                                "full_name": customer_name,
-                                "email": customer_email,
-                            }
-                        )
-
-                        if not created:
-                            customer.full_name = customer_name
-                            customer.email = customer_email
-                            customer.save()
-
-                        booking = Booking.objects.create(
-                            business=business,
-                            customer=customer,
-                            employee=employee,
-                            service=service,
-                            booking_date=booking_date_obj,
-                            start_time=start_time_obj,
-                            source="dashboard"
-                        )
-
-                        booking_created = True
-
-                except IntegrityError:
-                    error_message = (
-                        "Ese hueco ya está ocupado o bloqueado. "
-                        "Elige otra hora."
-                    )
 
                 if booking_created:
                     # =====================================================
