@@ -8,7 +8,7 @@ from django.conf import settings
 
 from bookings.utils import get_available_slots, has_conflict, lock_employee_day_bookings
 from bookings.models import Booking
-from bookings.emails import send_booking_emails
+from bookings.emails import send_booking_emails_async
 from customers.models import Customer
 from employees.models import Employee, EmployeeService
 from services_app.models import Service
@@ -90,6 +90,21 @@ def create_booking_view(request):
             )
 
         business = Business.objects.get(slug=business_slug)
+
+        # =====================================================
+        # RESPETAR "PERMITIR RESERVAS EN FECHAS PASADAS"
+        # =====================================================
+        # Mismo caso que en el resto de vías de reserva: sin esto,
+        # se podía crear por API una reserva con fecha pasada aunque
+        # el negocio tuviera esa opción desactivada.
+        # =====================================================
+
+        if not business.allow_past_bookings and booking_date < datetime.now().date():
+            return JsonResponse(
+                {"error": "No se puede reservar en una fecha pasada."},
+                status=400
+            )
+
         service = Service.objects.get(id=service_id, business=business, active=True)
 
         # El empleado debe pertenecer a este negocio Y ofrecer este servicio.
@@ -153,8 +168,9 @@ def create_booking_view(request):
                 status=409
             )
 
-        # Enviar emails automáticos
-        send_booking_emails(booking)
+        # Enviar emails automáticos (en segundo plano, sin bloquear
+        # la respuesta a Landbot mientras dura la conexión SMTP)
+        send_booking_emails_async(booking)
 
         return JsonResponse({
             "message": "Reserva creada correctamente",
