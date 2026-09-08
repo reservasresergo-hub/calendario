@@ -1,6 +1,8 @@
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db import close_old_connections
 import logging
+import threading
 
 from automations.models import EmailTemplate
 
@@ -195,3 +197,36 @@ def send_booking_emails(booking, cancel_url=""):
         )
 
         return False
+
+
+def send_booking_emails_async(booking, cancel_url=""):
+    """
+    Igual que send_booking_emails(), pero sin hacer esperar al cliente
+    mientras se manda el correo.
+
+    Por qué existe esto: mandar un email por SMTP tarda unos segundos
+    (la conexión con Brevo). Antes, ese tiempo se sumaba directamente
+    a la respuesta que recibía el cliente al confirmar su reserva —
+    y, como el servidor solo atiende una petición a la vez, mientras
+    tanto CUALQUIER otro visitante de CUALQUIER negocio se quedaba
+    esperando también, aunque solo quisiera mirar la web.
+
+    Con esto, la reserva se confirma al cliente al instante, y el
+    email se manda por detrás, en un hilo aparte, sin bloquear a nadie
+    más. Si el envío falla, sigue registrándose en los logs exactamente
+    igual que antes (toda la lógica de aviso ya vive dentro de
+    send_booking_emails() y no cambia).
+    """
+
+    def _enviar_en_segundo_plano():
+        try:
+            send_booking_emails(booking, cancel_url=cancel_url)
+        finally:
+            # Cada hilo nuevo abre su propia conexión a la base de
+            # datos si la necesita (aquí, para leer la plantilla de
+            # email). Sin cerrarla explícitamente al terminar, esas
+            # conexiones se quedarían acumulando poco a poco.
+            close_old_connections()
+
+    thread = threading.Thread(target=_enviar_en_segundo_plano, daemon=True)
+    thread.start()

@@ -12,7 +12,7 @@ from django.urls import reverse
 
 from businesses.models import Business
 from bookings.models import Booking
-from bookings.emails import send_booking_emails
+from bookings.emails import send_booking_emails_async
 from bookings.utils import get_available_slots, has_conflict, lock_employee_day_bookings, safe_json_for_script
 from customers.models import Customer
 from employees.models import Employee, EmployeeService
@@ -457,39 +457,26 @@ def create_booking(request):
                     # (a diferencia de una reserva hecha por un cliente
                     # desde la web pública) nunca enviaba ningún email
                     # de confirmación. Ahora se envía igual en los dos
-                    # casos. Si el email falla, la reserva ya está
-                    # creada y no se rompe nada — el fallo solo queda
-                    # registrado en los logs.
+                    # casos, y en segundo plano (sin bloquear al panel
+                    # mientras dura la conexión SMTP). Si el email
+                    # falla, la reserva ya está creada y no se rompe
+                    # nada — el fallo queda registrado en los logs.
                     # =====================================================
 
-                    try:
-                        cancel_url = request.build_absolute_uri(
-                            reverse(
-                                "cancel-booking-public",
-                                kwargs={
-                                    "business_slug": business.slug,
-                                    "cancel_token": booking.cancel_token,
-                                }
-                            )
+                    cancel_url = request.build_absolute_uri(
+                        reverse(
+                            "cancel-booking-public",
+                            kwargs={
+                                "business_slug": business.slug,
+                                "cancel_token": booking.cancel_token,
+                            }
                         )
+                    )
 
-                        email_sent = send_booking_emails(
-                            booking,
-                            cancel_url=cancel_url
-                        )
-
-                        if not email_sent:
-                            logger.warning(
-                                "La reserva %s (creada desde el panel) no envió email.",
-                                booking.id
-                            )
-
-                    except Exception:
-                        logger.exception(
-                            "La reserva %s (creada desde el panel) se creó "
-                            "correctamente, pero falló el envío de email.",
-                            booking.id
-                        )
+                    send_booking_emails_async(
+                        booking,
+                        cancel_url=cancel_url
+                    )
 
                     messages.success(request, "Reserva creada correctamente.")
                     return redirect("dashboard-home")

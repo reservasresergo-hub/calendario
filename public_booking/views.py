@@ -11,7 +11,7 @@ from employees.models import Employee, EmployeeService
 from bookings.utils import get_available_slots, has_conflict, lock_employee_day_bookings, safe_json_for_script
 from customers.models import Customer
 from bookings.models import Booking
-from bookings.emails import send_booking_emails
+from bookings.emails import send_booking_emails_async
 
 
 logger = logging.getLogger(__name__)
@@ -268,23 +268,14 @@ def booking_home(request, business_slug):
                     )
                 )
 
-                try:
-                    email_sent = send_booking_emails(
-                        booking,
-                        cancel_url=cancel_url
-                    )
-
-                    if not email_sent:
-                        logger.warning(
-                            "La reserva %s se creó correctamente, pero el email no se envió.",
-                            booking.id
-                        )
-
-                except Exception:
-                    logger.exception(
-                        "La reserva %s se creó correctamente, pero falló el envío de email.",
-                        booking.id
-                    )
+                # El email se manda en segundo plano (send_booking_emails_async)
+                # para no hacer esperar al cliente ni a cualquier otro
+                # visitante mientras dura la conexión SMTP. Si falla,
+                # sigue quedando registrado en los logs igual que antes.
+                send_booking_emails_async(
+                    booking,
+                    cancel_url=cancel_url
+                )
 
                 return render(
                     request,
